@@ -1,0 +1,2 @@
+# LotteryPlugin
+宝くじプラグイン！
