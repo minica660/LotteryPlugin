@@ -1,0 +1,40 @@
+# 基本設定
+display-name: "§3§lサンプルジャンボ宝くじ！"
+
+# 購入に関する設定
+ticket-price: 500   # 1枚当たりの価格
+bulk-purchase-amount: 10    # 連番・バラで購入するときの基本セット枚数
+max-tickets-per-player: 30    # 1人が買える最大枚数
+
+# チケットの抽選範囲
+max-group: 10   # 組の最大数(例：1組～10組)
+max-number: 9999    # 番号の最大値
+
+# 期間・演出に関する設定
+claim-expiry-days: 7    # 抽選から何日間その宝くじの交換が可能か(日)
+bossbar:
+  title: "§6§l[サンプルジャンボ宝くじ]   抽選まで: %time% "
+  color: "GOLD"
+  style: "NOTCHED_12"
+
+
+# 賞金配分と当選モードの設定
+prize-settings:
+  type: NORMAL
+  total-return-rate: 0.70   # 売上額の何%をプレイヤーに還元するかどうか
+
+  distribution:
+    - display-name: "§e§l1等!"
+      pool-share: 0.60    # 還元される賞金のうち60%が１等の(１枚当たり)賞金になる
+      mode: "UNIQUE"    # 完全に１つの「組」と「番号」を生成して抽選
+      reward-type: "MONEY"    # 報酬の種類
+
+    - display-name: "§7２等"
+      pool-share: 0.30    # 還元される賞金のうち30%
+      mode: "NUMBER_ONLY"   # 組は関係なく「番号」だけ一致で当選
+      reward-type: "MONEY"
+
+    - display-name: "§c３等"
+      pool-share: 0.10    # 還元される賞金のうち10%（バラ10枚買えば必ず1枚当たる）
+      mode: "LAST_1_DIGIT"    # 下1桁が一致で当選
+      reward-type: "MONEY"

@@ -1,0 +1,9 @@
+name: Lottery
+version: '${version}'
+
+main: com.example.minicash.lottery.Lottery
+api-version: '1.21.11'
+load: POSTWORLD
+authors:
+  - MiniCash
+description: 宝くじプラグイン！
