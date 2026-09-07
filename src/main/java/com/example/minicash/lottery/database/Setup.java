@@ -96,7 +96,11 @@ public class Setup {
                 
                     CREATE TABLE IF NOT EXISTS `active_lottery_pool` (
                     `session_id` VARCHAR(64) NOT NULL,
-                    `total_sales` DOUBLE NOT NULL
+                    `lotto_id` VARCHAR(64) NOT NULL,
+                    `total_sales` DOUBLE NOT NULL,
+                    `start_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `end_time` TIMESTAMP NOT NULL,
+                    `is_active` BOOLEAN NOT NULL DEFAULT TRUE
                     );
                 """;
 
@@ -119,7 +123,7 @@ public class Setup {
                     `win_number` INT NOT NULL,
                     `reward_type` VARCHAR(16) NOT NULL,
                     `reward_value` LONGTEXT NOT NULL,
-                    `expiry_time` TIMESTAMP NOT NULL,
+                    `expiry_time` TIMESTAMP NOT NULL
 
                     );
                 """;

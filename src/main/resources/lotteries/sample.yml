@@ -11,6 +11,7 @@ max-group: 10   # 組の最大数(例：1組～10組)
 max-number: 9999    # 番号の最大値
 
 # 期間・演出に関する設定
+duration-minutes: 10080 # 7日間
 claim-expiry-days: 7    # 抽選から何日間その宝くじの交換が可能か(日)
 bossbar:
   title: "§6§l[サンプルジャンボ宝くじ]   抽選まで: %time% "

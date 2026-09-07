@@ -26,6 +26,7 @@ public class LotteryConfig {
 
 
     // 期間・演出に関する設定
+    private final int durationMinutes;
     private final int claimExpiryDays;
     private final BossBar bossBar;
 
@@ -52,6 +53,7 @@ public class LotteryConfig {
         this.maxGroup = config.getInt("max-group");
         this.maxNumber = config.getInt("max-number");
 
+        this.durationMinutes = config.getInt("duration-minutes",10080);
         this.claimExpiryDays = config.getInt("claim-expiry-days");
         this.bossBar = BossBar.bossBar(
                 Component.text(config.getString("bossbar.title","a")),
@@ -110,6 +112,10 @@ public class LotteryConfig {
 
     public int getMaxNumber(){
         return maxNumber;
+    }
+
+    public int getDurationMinutes(){
+        return durationMinutes;
     }
 
     public int getClaimExpiryDays(){

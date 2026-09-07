@@ -1,11 +1,13 @@
 package com.example.minicash.lottery.database;
 
 import com.example.minicash.library.common.response.NormalResponse;
+import com.example.minicash.lottery.data.ActiveLotterySession;
 import com.zaxxer.hikari.HikariDataSource;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,6 +20,140 @@ public class ActiveDatabase {
     }
 
 
+    /**
+     * 新規セッションを作成してDBに保存
+     */
+    public CompletableFuture<Boolean> createSession(String sessionId, String lottoId, LocalDateTime startTime, LocalDateTime endTime) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String deactivateSql = "UPDATE `active_lottery_pool` SET `is_active` = FALSE WHERE `is_active` = TRUE;";
+
+            String insertSql = """
+                INSERT INTO `active_lottery_pool` (`session_id`, `lotto_id`, `total_sales`, `start_time`, `end_time`, `is_active`)
+                VALUES (?, ?, 0, ?, ?, TRUE);
+            """;
+
+            try (Connection connection = hikariDataSource.getConnection()) {
+
+
+                connection.setAutoCommit(false);
+
+
+
+                try {
+                    try (PreparedStatement deactivateStmt = connection.prepareStatement(deactivateSql)) {
+                        deactivateStmt.executeUpdate();
+                    }
+
+                    try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+
+                        insertStmt.setString(1, sessionId);
+                        insertStmt.setString(2, lottoId);
+                        insertStmt.setTimestamp(3, Timestamp.valueOf(startTime));
+                        insertStmt.setTimestamp(4, Timestamp.valueOf(endTime));
+                        insertStmt.executeUpdate();
+
+                    }
+
+                    connection.commit();
+                    return true;
+
+                } catch (SQLException e) {
+                    connection.rollback();
+                    e.printStackTrace();
+                    return false;
+                } finally {
+                    connection.setAutoCommit(true);
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+
+        });
+
+
+    }
+
+    /**
+     * サーバー起動時用：現在アクティブな単一セッションを取得
+     * @return 存在しなければnullを返す
+     */
+    public CompletableFuture<ActiveLotterySession> loadActiveSession() {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = """
+                SELECT `session_id`, `lotto_id`, `start_time`, `end_time`
+                FROM `active_lottery_pool`
+                WHERE `is_active` = TRUE
+                LIMIT 1;
+            """;
+
+            try (Connection connection = hikariDataSource.getConnection();
+                 PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    String sessionId = rs.getString("session_id");
+                    String lottoId = rs.getString("lotto_id");
+                    LocalDateTime startTime = rs.getTimestamp("start_time").toLocalDateTime();
+                    LocalDateTime endTime = rs.getTimestamp("end_time").toLocalDateTime();
+
+                    return new ActiveLotterySession(sessionId, lottoId, startTime, endTime);
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+
+            return null;
+
+        });
+
+    }
+
+    /**
+     * セッション終了時に is_activeを falseに更新させる
+     */
+    public CompletableFuture<Void> deactivateSession(String sessionId) {
+
+        return CompletableFuture.runAsync(() -> {
+
+            String sql = """
+                UPDATE `active_lottery_pool`
+                SET `is_active` = FALSE
+                WHERE `session_id` = ?;
+            """;
+
+
+            try (Connection connection = hikariDataSource.getConnection();
+                 PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+
+                stmt.setString(1, sessionId);
+                stmt.executeUpdate();
+
+
+            } catch (SQLException e) {
+
+                e.printStackTrace();
+
+            }
+
+        });
+
+    }
+
+
+    /**
+     * 売り上げ金を追加します
+     * @param sessionID 開催中の宝くじ識別ID
+     * @param amount    金額
+     * @return  NormalResponse
+     */
     public CompletableFuture<NormalResponse> addTotalMoney(String sessionID, int amount) {
 
         return CompletableFuture.supplyAsync(() -> {
