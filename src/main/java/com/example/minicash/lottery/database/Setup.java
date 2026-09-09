@@ -33,7 +33,7 @@ public class Setup {
 
     }
 
-    public HikariDataSource getHikariSe() {
+    public HikariDataSource getHikariSource() {
         return hikariSe;
     }
 
@@ -97,7 +97,7 @@ public class Setup {
                     CREATE TABLE IF NOT EXISTS `active_lottery_pool` (
                     `session_id` VARCHAR(64) NOT NULL,
                     `lotto_id` VARCHAR(64) NOT NULL,
-                    `total_sales` DOUBLE NOT NULL,
+                    `total_sales` INT NOT NULL,
                     `start_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     `end_time` TIMESTAMP NOT NULL,
                     `is_active` BOOLEAN NOT NULL DEFAULT TRUE

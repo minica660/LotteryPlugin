@@ -1,6 +1,5 @@
 package com.example.minicash.lottery.manager;
 
-import com.example.minicash.lottery.data.LotteryConfig;
 import com.example.minicash.lottery.model.LottoType;
 import com.example.minicash.lottery.util.LotteryKeys;
 import net.kyori.adventure.text.Component;

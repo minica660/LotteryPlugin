@@ -10,12 +10,12 @@ import java.util.Random;
 
 public class LotteryTicketGenerator {
 
-    private final Random random = new Random();
+    private static final Random random = new Random();
 
     /**
      * LottoTypeに応じてチケットを生成する
      */
-    public List<ItemStack> generateTickets(LotteryConfig lotteryConfig, String sessionID, LottoType type, int packAmount) {
+    public static List<ItemStack> generateTickets(LotteryConfig lotteryConfig, String sessionID, LottoType type, int packAmount) {
         List<ItemStack> tickets = new ArrayList<>();
 
 

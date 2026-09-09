@@ -1,6 +1,6 @@
 package com.example.minicash.lottery.data;
 
-import com.example.minicash.lottery.model.PrizeReward;
+import com.example.minicash.lottery.model.PrizeSettingType;
 import com.example.minicash.lottery.model.RewardType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -32,7 +32,7 @@ public class LotteryConfig {
 
 
     // 賞金配分と当選モードの設定
-    private final RewardType rewardType;
+    private final PrizeSettingType prizeType;
     private final double totalReturnRate;
 
     private final List<PrizeReward> prizeList = new ArrayList<>();
@@ -63,7 +63,7 @@ public class LotteryConfig {
         );
 
 
-        this.rewardType = RewardType.valueOf(config.getString("prize-settings.reward-type", "NORMAL"));
+        this.prizeType = PrizeSettingType.valueOf(config.getString("prize-settings.reward-type", "NORMAL"));
         this.totalReturnRate = config.getDouble("prize-settings.total-return-rate",0.70);
 
 
@@ -75,10 +75,30 @@ public class LotteryConfig {
             double poolShare = ((Number) map.get("pool-share")).doubleValue();
             String mode = (String) map.get("mode");
 
-            String rewardType = (String) map.get("reward-type");
+            RewardType rewardType = RewardType.valueOf((String) map.get("reward-type"));
 
-            PrizeReward reward = new PrizeReward(displayName, poolShare, mode, rewardType);
-            prizeList.add(reward);
+            // 完成品
+            PrizeReward prizeReward;
+
+            if(rewardType == RewardType.ITEM){
+
+
+                /*
+                    configからitemBase64に変換された文字列を取得させるがconfig内に書かれるかは不明
+                    現在はこの機能は仮段階のため保留とする
+                 */
+                String itemBase64 = (String) map.get("item-value");
+
+                prizeReward = new PrizeReward(displayName, poolShare, mode, rewardType, prizeType, itemBase64);
+
+            }else {
+
+                // MONEYの場合はitemのデータは持たせない
+                prizeReward = new PrizeReward(displayName, poolShare, mode, rewardType, prizeType);
+            }
+
+            prizeList.add(prizeReward);
+
         }
 
 
@@ -126,8 +146,8 @@ public class LotteryConfig {
         return bossBar;
     }
 
-    public RewardType getRewardType(){
-        return rewardType;
+    public PrizeSettingType getPrizeType(){
+        return prizeType;
     }
 
     public double getTotalReturnRate(){

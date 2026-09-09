@@ -28,11 +28,9 @@ public class ItemClickEvent implements Listener {
 
     private final LotteryConfigManager lotteryConfigManager;
 
-    private final LotteryTicketGenerator lotteryTicketGenerator;
 
-    public ItemClickEvent(LotteryConfigManager lotteryConfigManager , LotteryTicketGenerator lotteryTicketGenerator) {
+    public ItemClickEvent(LotteryConfigManager lotteryConfigManager ) {
         this.lotteryConfigManager = lotteryConfigManager;
-        this.lotteryTicketGenerator = lotteryTicketGenerator;
     }
 
 
@@ -93,7 +91,7 @@ public class ItemClickEvent implements Listener {
             // 手のアイテムを1つ減らす
             item.setAmount(item.getAmount() - 1);
 
-            List<ItemStack> lottoItems = lotteryTicketGenerator.generateTickets(lotteryConfig ,sessionId ,lottoType,ticketAmount);
+            List<ItemStack> lottoItems = LotteryTicketGenerator.generateTickets(lotteryConfig ,sessionId ,lottoType,ticketAmount);
 
             lottoItems.forEach(itemStack -> {
 

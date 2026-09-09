@@ -6,9 +6,6 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ActiveDatabase {
@@ -21,24 +18,23 @@ public class ActiveDatabase {
 
 
     /**
-     * 新規セッションを作成してDBに保存
+     * 新規宝くじを作成してDBに保存
      */
-    public CompletableFuture<Boolean> createSession(String sessionId, String lottoId, LocalDateTime startTime, LocalDateTime endTime) {
+    public CompletableFuture<Boolean> createLotto(String sessionId, String lottoId, LocalDateTime startTime, LocalDateTime endTime) {
 
         return CompletableFuture.supplyAsync(() -> {
 
             String deactivateSql = "UPDATE `active_lottery_pool` SET `is_active` = FALSE WHERE `is_active` = TRUE;";
 
             String insertSql = """
-                INSERT INTO `active_lottery_pool` (`session_id`, `lotto_id`, `total_sales`, `start_time`, `end_time`, `is_active`)
-                VALUES (?, ?, 0, ?, ?, TRUE);
-            """;
+                        INSERT INTO `active_lottery_pool` (`session_id`, `lotto_id`, `total_sales`, `start_time`, `end_time`, `is_active`)
+                        VALUES (?, ?, 0, ?, ?, TRUE);
+                    """;
 
             try (Connection connection = hikariDataSource.getConnection()) {
 
 
                 connection.setAutoCommit(false);
-
 
 
                 try {
@@ -80,16 +76,17 @@ public class ActiveDatabase {
 
     /**
      * サーバー起動時用：現在アクティブな単一セッションを取得
+     *
      * @return 存在しなければnullを返す
      */
     public CompletableFuture<ActiveLotterySession> loadActiveSession() {
         return CompletableFuture.supplyAsync(() -> {
             String sql = """
-                SELECT `session_id`, `lotto_id`, `start_time`, `end_time`
-                FROM `active_lottery_pool`
-                WHERE `is_active` = TRUE
-                LIMIT 1;
-            """;
+                        SELECT `session_id`, `lotto_id`, `start_time`, `end_time`
+                        FROM `active_lottery_pool`
+                        WHERE `is_active` = TRUE
+                        LIMIT 1;
+                    """;
 
             try (Connection connection = hikariDataSource.getConnection();
                  PreparedStatement stmt = connection.prepareStatement(sql);
@@ -123,10 +120,10 @@ public class ActiveDatabase {
         return CompletableFuture.runAsync(() -> {
 
             String sql = """
-                UPDATE `active_lottery_pool`
-                SET `is_active` = FALSE
-                WHERE `session_id` = ?;
-            """;
+                        UPDATE `active_lottery_pool`
+                        SET `is_active` = FALSE
+                        WHERE `session_id` = ?;
+                    """;
 
 
             try (Connection connection = hikariDataSource.getConnection();
@@ -150,9 +147,10 @@ public class ActiveDatabase {
 
     /**
      * 売り上げ金を追加します
+     *
      * @param sessionID 開催中の宝くじ識別ID
      * @param amount    金額
-     * @return  NormalResponse
+     * @return NormalResponse
      */
     public CompletableFuture<NormalResponse> addTotalMoney(String sessionID, int amount) {
 
@@ -186,6 +184,44 @@ public class ActiveDatabase {
 
         });
 
+
+    }
+
+
+    /**
+     * 指定したsession_idの総合売上金額を取得
+     *
+     * @param sessionID 対象のセッションID
+     * @return 売上金額（存在しない場合は 0）
+     */
+    public CompletableFuture<Integer> getTotalMoney(String sessionID) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String sql = """
+                        SELECT `total_sales` 
+                        FROM `active_lottery_pool` 
+                        WHERE `session_id` = ?;
+                    """;
+
+            try (Connection connection = hikariDataSource.getConnection();
+                 PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+                pstmt.setString(1, sessionID);
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("total_sales");
+                    }
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return 0;
+
+        });
 
     }
 

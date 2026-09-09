@@ -12,11 +12,13 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class LotteryPurchaseManager {
@@ -28,14 +30,13 @@ public class LotteryPurchaseManager {
     private final ActiveDatabase activeDatabase;
     private final PlayerDatabase playerDatabase;
 
-    private final LotteryTicketGenerator lotteryTicketGenerator;
 
-    public LotteryPurchaseManager(Economy economy,JavaPlugin plugin , ActiveDatabase activeDatabase , PlayerDatabase playerDatabase , LotteryTicketGenerator lotteryTicketGenerator) {
+    public LotteryPurchaseManager(Economy economy,JavaPlugin plugin , ActiveDatabase activeDatabase , PlayerDatabase playerDatabase  , LotteryManager lotteryManager) {
         this.economy = economy;
         this.plugin = plugin;
         this.activeDatabase = activeDatabase;
         this.playerDatabase = playerDatabase;
-        this.lotteryTicketGenerator = lotteryTicketGenerator;
+        this.lotteryManager = lotteryManager;
     }
 
 
@@ -44,7 +45,7 @@ public class LotteryPurchaseManager {
      * @param amount 個数
      * @return
      */
-    public void buyLot(String sessionID ,LotteryConfig lotteryConfig, Player player, int amount, LottoType lottoType){
+    public void buyLotto(String sessionID , LotteryConfig lotteryConfig, Player player, int amount, LottoType lottoType){
 
         ActiveLotterySession currentSession = lotteryManager.getActiveLotterySession();
 
@@ -72,25 +73,30 @@ public class LotteryPurchaseManager {
             }
         }
 
+
+
         playerDatabase.getTicketCount(player.getUniqueId(), sessionID).thenAccept(count -> {
 
             Bukkit.getScheduler().runTask(plugin,() ->{
 
-                if(count + amount > lotteryConfig.getMaxTicketsPerPlayer()){
-                    player.sendMessage(Lottery.getMessage(
-                            Component.text("あなたは" + lotteryConfig.getDisplayName() + "の最大購入枚数を到達しています", NamedTextColor.RED)
-                    ));
 
+                if(count + amount > lotteryConfig.getMaxTicketsPerPlayer()){
+
+                    player.sendMessage(Lottery.getMessage(
+                            Component.text("あなたは" + lotteryConfig.getDisplayName() + "の最大購入枚数を到達しているため購入することができません", NamedTextColor.RED)
+                    ));
 
                     return;
                 }
+
+
 
                 int totalPrice = lotteryConfig.getTicketPrice() * amount;
 
                 if (!economy.has(player, totalPrice)) {
 
                     player.sendMessage(Lottery.getMessage(
-                            Component.text("所持金が足りません（必要額: $" + totalPrice + "）", NamedTextColor.RED)
+                            Component.text("所持金が足りません（必要額: " + totalPrice + "円）", NamedTextColor.RED)
                     ));
 
                     return;
@@ -129,20 +135,57 @@ public class LotteryPurchaseManager {
                         }
 
                         if (lottoType == LottoType.RANDOM || lottoType == LottoType.CONSECUTIVE) {
+
                             ItemStack packItem = ItemManager.createLotteryPack(sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), lottoType, amount);
-                            player.getInventory().addItem(packItem);
+
+                            Map<Integer, ItemStack> leftover = player.getInventory().addItem(packItem);
+
+                            if (!leftover.isEmpty()) {
+
+                                for (ItemStack item : leftover.values()) {
+
+                                    Item droppedItem = player.getWorld().dropItemNaturally(player.getLocation(), item);
+
+                                    droppedItem.setOwner(player.getUniqueId());
+
+                                }
+
+                                player.sendMessage(Lottery.getMessage(
+                                        Component.text("インベントリに空きがないためドロップしました", NamedTextColor.YELLOW)
+                                ));
+                            }
+
                             player.sendMessage(Lottery.getMessage(
                                     Component.text(lotteryConfig.getDisplayName() + "の宝くじパックを付与しました", NamedTextColor.GOLD)
                             ));
                         } else {
 
-                            List<ItemStack> lottoItems = lotteryTicketGenerator.generateTickets(lotteryConfig, sessionID, lottoType, amount);
-                            for (ItemStack item : lottoItems) {
-                                player.getInventory().addItem(item);
+                            List<ItemStack> lottoItems = LotteryTicketGenerator.generateTickets(lotteryConfig, sessionID, lottoType, amount);
+
+                            ItemStack[] itemsArray = lottoItems.toArray(new ItemStack[0]);
+
+                            Map<Integer, ItemStack> leftover = player.getInventory().addItem(itemsArray);
+
+                            if (!leftover.isEmpty()) {
+                                for (ItemStack item : leftover.values()) {
+
+                                    Item droppedItem = player.getWorld().dropItemNaturally(player.getLocation(), item);
+
+                                    droppedItem.setOwner(player.getUniqueId());
+
+                                }
+
+                                player.sendMessage(Lottery.getMessage(
+                                        Component.text("インベントリに空きがないためドロップしました", NamedTextColor.YELLOW)
+                                ));
+
                             }
+
+
                             player.sendMessage(Lottery.getMessage(
                                     Component.text(lotteryConfig.getDisplayName() + "の宝くじを" + amount + "枚付与しました", NamedTextColor.GOLD)
                             ));
+
 
                         }
 

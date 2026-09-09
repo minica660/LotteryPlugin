@@ -39,3 +39,4 @@ prize-settings:
       pool-share: 0.10    # 還元される賞金のうち10%（バラ10枚買えば必ず1枚当たる）
       mode: "LAST_1_DIGIT"    # 下1桁が一致で当選
       reward-type: "MONEY"
+      # reward-typeがITEMの場合はitem-value項目を追加し、itemBase64に変換された文字列を入れる
