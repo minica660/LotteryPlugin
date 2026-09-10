@@ -1,8 +1,6 @@
 package com.example.minicash.lottery.commands;
 
-import com.example.minicash.lottery.Lottery;
-import com.example.minicash.lottery.database.ActiveDatabase;
-import com.example.minicash.lottery.manager.LotteryManager;
+import com.example.minicash.lottery.commands.handler.LotteryAdminCommandHandler;
 import com.example.minicash.lottery.manager.config.LotteryConfigManager;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -56,6 +54,13 @@ public class LotteryAdminCommand {
                                 .executes(lotteryAdminCommandHandler::handlePlayerInfo)
                         )
 
+                )
+                .then(Commands.literal("spawn")
+
+                        .then(Commands.argument("shoptype",StringArgumentType.word())
+
+                                .executes(lotteryAdminCommandHandler::handleSpawnShopVillager)
+                        )
                 )
 
                 .build();

@@ -1,6 +1,7 @@
 package com.example.minicash.lottery.manager;
 
 import com.example.minicash.library.common.response.NormalResponse;
+import com.example.minicash.lottery.Lottery;
 import com.example.minicash.lottery.data.ActiveLotterySession;
 import com.example.minicash.lottery.data.LotteryConfig;
 import com.example.minicash.lottery.database.ActiveDatabase;
@@ -13,12 +14,15 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -31,6 +35,10 @@ public class LotteryManager {
     private final LotteryConfigManager lotteryConfigManager;
 
     private ActiveLotterySession activeLotterySession = null;
+
+
+    private BukkitTask lottoBukkitTask = null;
+
 
     public LotteryManager(JavaPlugin plugin, ActiveDatabase activeDatabase, LotteryResultDatabase lotteryResultDatabase,LotteryConfigManager lotteryConfigManager) {
         this.plugin = plugin;
@@ -50,6 +58,11 @@ public class LotteryManager {
         }
 
 
+        if(lottoBukkitTask != null){
+            lottoBukkitTask.cancel();
+        }
+
+
         String sessionID = UUID.randomUUID().toString();
 
         LocalDateTime now = LocalDateTime.now();
@@ -59,16 +72,34 @@ public class LotteryManager {
 
         activeDatabase.createLotto(sessionID, lotteryConfig.getLottoID(), now, endTime).thenAccept(success -> {
 
-            if (success) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
 
-                this.activeLotterySession = session;
+                if (success) {
 
-                scheduleEndTask(session , lotteryConfig);
+                    this.activeLotterySession = session;
 
-                plugin.getLogger().info("宝くじ「" + lotteryConfig.getDisplayName() + "」を開催しました！ ID: " + sessionID);
+                    scheduleEndTask(session, lotteryConfig);
+
+                    Bukkit.getOnlinePlayers().forEach(player -> {
+
+                        player.showBossBar(lotteryConfig.getBossBar());
+
+                    });
 
 
-            }
+                    startBukkitTask(activeLotterySession,lotteryConfig);
+
+
+                    plugin.getLogger().info("宝くじ「" + lotteryConfig.getDisplayName() + "」を開催しました！ ID: " + sessionID);
+
+
+                } else {
+                    plugin.getLogger().warning("宝くじを開催しようとしましたが実行されませんでした");
+                }
+
+
+            });
+
 
         });
 
@@ -82,7 +113,7 @@ public class LotteryManager {
     /**
      * サーバー起動時に呼び出す復帰処理
      */
-    public void loadActiveLotteryOnStartup() {
+    public void loadActiveLottery() {
 
         activeDatabase.loadActiveSession().thenAccept(activeLottery -> {
 
@@ -120,6 +151,8 @@ public class LotteryManager {
                     }
 
                     scheduleEndTask(activeLottery,lotteryConfig);
+
+                    startBukkitTask(activeLottery,lotteryConfig);
 
                     long remainingMinutes = Duration.between(LocalDateTime.now(), activeLottery.getEndTime()).toMinutes();
 
@@ -162,6 +195,17 @@ public class LotteryManager {
      * 宝くじの終了処理
      */
     public void finishSession(ActiveLotterySession session,LotteryConfig lotteryConfig) {
+
+        stopBukkitTask();
+
+        if (lotteryConfig != null && lotteryConfig.getBossBar() != null) {
+
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                player.hideBossBar(lotteryConfig.getBossBar());
+            });
+
+
+        }
 
         if (activeLotterySession != null && activeLotterySession.getSessionId().equals(session.getSessionId())) {
             this.activeLotterySession = null;
@@ -277,6 +321,199 @@ public class LotteryManager {
                 });
 
     }
+
+
+
+    /**
+     *
+     */
+    public void startBukkitTask(ActiveLotterySession activeLottery , LotteryConfig lotteryConfig){
+
+        int count = 0;
+
+        // BukkitTask処理
+        lottoBukkitTask = Bukkit.getScheduler().runTaskTimer(plugin , new Runnable(){
+
+            private int count;
+
+            @Override
+            public void run() {
+
+                if (!isSessionActive()) {
+                    stopBukkitTask();
+                    return;
+                }
+
+                if (count == 3) {
+
+                    Bukkit.getOnlinePlayers().forEach(player -> sendLotteryInfo(player));
+
+                    count = 0;
+
+                }
+
+
+                String rawTitle = lotteryConfig.getBossBarTitle();
+                Component updatedTitle = formatBossBarTitle(rawTitle, activeLottery);
+
+                lotteryConfig.getBossBar().name(updatedTitle);
+
+
+            }
+
+        },0L , 1200L);
+
+    }
+
+    public void stopBukkitTask(){
+
+
+        if(lottoBukkitTask != null){
+            lottoBukkitTask.cancel();
+            lottoBukkitTask = null;
+        }
+
+
+    }
+
+
+
+    /**
+     * ボスバーの特殊文字を置きかえる
+     */
+    public Component formatBossBarTitle(String title, ActiveLotterySession activeLottery) {
+
+        Duration duration = Duration.between(LocalDateTime.now(), activeLottery.getEndTime());
+        long totalSecond = duration.getSeconds();
+
+        String timeString;
+
+        if (totalSecond <= 0) {
+
+            timeString = "終了間近";
+
+        }else {
+
+            long days = duration.toDays();
+            long hours = duration.toHoursPart();
+            long minutes = duration.toMinutesPart();
+
+            if (days > 0) {
+
+                //残り期間が1日以上の場合
+                timeString = String.format("%d日 %d時間", days, hours);
+
+            } else if (duration.toHours() > 0) {
+
+                // 残り期間が１日未満で１時間以上なら
+                timeString = String.format("%d時間 %d分", hours, minutes);
+            } else {
+
+                // 残り時間が１時間未満なら
+                timeString = String.format("%d分", minutes);
+
+            }
+        }
+
+        String formattedText = title.replace("%time%", timeString);
+        return Component.text(formattedText);
+    }
+
+
+    /**
+     * プレイヤー参加時のボスバー表示
+     */
+    public void showBossBar(Player player) {
+
+        if (isSessionActive()) {
+
+            LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(getActiveLotterySession().getLottoId());
+
+            if (lotteryConfig != null && lotteryConfig.getBossBar() != null) {
+                player.showBossBar(lotteryConfig.getBossBar());
+            }
+
+        }
+
+    }
+
+    /**
+     * プレイヤー退出時のボスバー非表示
+     */
+    public void hideBossBar(Player player) {
+
+        if (isSessionActive()) {
+
+            LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(getActiveLotterySession().getLottoId());
+
+            if (lotteryConfig != null && lotteryConfig.getBossBar() != null) {
+                player.hideBossBar(lotteryConfig.getBossBar());
+            }
+
+        }
+
+    }
+
+
+
+    /**
+     * プレイヤーがゲームに参加した際に送信するメッセージ
+     */
+    public void sendLotteryInfo(Player player){
+
+        if(isSessionActive()) {
+
+            ActiveLotterySession activeLottery = getActiveLotterySession();
+            LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(getActiveLotterySession().getLottoId());
+
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+            String endTimeString = activeLottery.getEndTime().format(formatter);
+
+            // 残り時間の計算
+            Duration remaining = Duration.between(LocalDateTime.now(), activeLottery.getEndTime());
+            long hours = remaining.toHours();
+            long minutes = remaining.toMinutesPart();
+
+            String timeString = (hours > 0)
+                    ? String.format("%d時間 %d分", hours, minutes)
+                    : String.format("%d分", minutes);
+
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("========== 宝くじ開催情報！ ==========", NamedTextColor.YELLOW).decorate(TextDecoration.BOLD)
+            ));
+
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("")
+            ));
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("開催中宝くじ：" + lotteryConfig.getDisplayName())
+            ));
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("残り時間：" + endTimeString + "( " + timeString +" )")
+            ));
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("")
+            ));
+
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("==============================", NamedTextColor.YELLOW).decorate(TextDecoration.BOLD)
+            ));
+
+
+
+        }
+
+    }
+
+
+
 
     /**
      * 現在アクティブな宝くじを取得

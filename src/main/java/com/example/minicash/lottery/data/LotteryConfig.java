@@ -28,6 +28,7 @@ public class LotteryConfig {
     // 期間・演出に関する設定
     private final int durationMinutes;
     private final int claimExpiryDays;
+    private final String bossBarTitle;
     private final BossBar bossBar;
 
 
@@ -55,8 +56,9 @@ public class LotteryConfig {
 
         this.durationMinutes = config.getInt("duration-minutes",10080);
         this.claimExpiryDays = config.getInt("claim-expiry-days");
+        this.bossBarTitle = config.getString("bossbar.title","宝くじ！！");
         this.bossBar = BossBar.bossBar(
-                Component.text(config.getString("bossbar.title","a")),
+                Component.text(bossBarTitle),
                 15.0f,
                 BossBar.Color.valueOf(config.getString("bossbar.color","RED")),
                 BossBar.Overlay.valueOf(config.getString("bossbar.style","NOTCHED_16"))
@@ -106,6 +108,8 @@ public class LotteryConfig {
     }
 
 
+
+
     public String getLottoID(){
         return  lottoID;
     }
@@ -140,6 +144,10 @@ public class LotteryConfig {
 
     public int getClaimExpiryDays(){
         return claimExpiryDays;
+    }
+
+    public String getBossBarTitle(){
+        return  bossBarTitle;
     }
 
     public BossBar getBossBar(){

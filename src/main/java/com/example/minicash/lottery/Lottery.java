@@ -1,15 +1,19 @@
 package com.example.minicash.lottery;
 
 import com.example.minicash.lottery.commands.LotteryAdminCommand;
-import com.example.minicash.lottery.commands.LotteryAdminCommandHandler;
+import com.example.minicash.lottery.commands.LottoCommand;
+import com.example.minicash.lottery.commands.handler.LotteryAdminCommandHandler;
 import com.example.minicash.lottery.database.*;
 import com.example.minicash.lottery.listener.ItemClickEvent;
+import com.example.minicash.lottery.listener.LotteryGUIEvent;
+import com.example.minicash.lottery.listener.PlayerConnectEvent;
+import com.example.minicash.lottery.listener.ShopEvent;
 import com.example.minicash.lottery.manager.LotteryClaimManager;
 import com.example.minicash.lottery.manager.LotteryManager;
 import com.example.minicash.lottery.manager.LotteryPurchaseManager;
-import com.example.minicash.lottery.manager.LotteryTicketGenerator;
 import com.example.minicash.lottery.manager.config.LotteryConfigManager;
-import io.papermc.paper.command.brigadier.Commands;
+import com.example.minicash.lottery.manager.gui.LotteryGUI;
+import com.example.minicash.lottery.manager.shop.VillagerShop;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -36,6 +40,9 @@ public final class Lottery extends JavaPlugin {
     private LotteryClaimManager lotteryClaimManager;
     private LotteryPurchaseManager lotteryPurchaseManager;
 
+    private LotteryGUI lotteryGUI;
+
+    private VillagerShop villagerShop;
 
     // コマンド関連
     private LotteryAdminCommand lotteryAdminCommand;
@@ -67,11 +74,16 @@ public final class Lottery extends JavaPlugin {
         this.lotteryClaimManager = new LotteryClaimManager(this,economy ,claimeTicketDatabase);
         this.lotteryPurchaseManager = new LotteryPurchaseManager(economy , this , activeDatabase , playerDatabase , lotteryManager);
 
+        this.lotteryGUI = new LotteryGUI(lotteryManager,lotteryConfigManager);
+
+        this.villagerShop = new VillagerShop(this);
 
         PluginManager pluginManager = getServer().getPluginManager();
 
         pluginManager.registerEvents(new ItemClickEvent(lotteryConfigManager),this);
-
+        pluginManager.registerEvents(new LotteryGUIEvent(),this);
+        pluginManager.registerEvents(new PlayerConnectEvent(lotteryManager),this);
+        pluginManager.registerEvents(new ShopEvent(this,villagerShop),this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             // register your commands here ...
@@ -84,6 +96,9 @@ public final class Lottery extends JavaPlugin {
 
         });
 
+        registerCommand("lotto","コマンド",new LottoCommand(lotteryPurchaseManager,lotteryGUI,lotteryClaimManager,lotteryManager,lotteryConfigManager));
+
+        lotteryManager.loadActiveLottery();
 
 
     }

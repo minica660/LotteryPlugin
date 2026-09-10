@@ -43,7 +43,6 @@ public class LotteryPurchaseManager {
     /**
      * 宝くじ購入のメインメソッド
      * @param amount 個数
-     * @return
      */
     public void buyLotto(String sessionID , LotteryConfig lotteryConfig, Player player, int amount, LottoType lottoType){
 
