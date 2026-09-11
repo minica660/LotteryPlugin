@@ -130,6 +130,8 @@ public class LotteryPurchaseManager {
                                     Component.text("購入処理中にエラーが発生したため処理を停止しました",NamedTextColor.RED)
                             ));
 
+                            plugin.getLogger().severe(result.getMessage());
+
                             return;
                         }
 

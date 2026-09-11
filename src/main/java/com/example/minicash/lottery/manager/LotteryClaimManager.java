@@ -1,8 +1,12 @@
 package com.example.minicash.lottery.manager;
 
 import com.example.minicash.lottery.Lottery;
+import com.example.minicash.lottery.data.LotteryConfig;
 import com.example.minicash.lottery.database.ClaimeTicketDatabase;
+import com.example.minicash.lottery.manager.config.LotteryConfigManager;
+import com.example.minicash.lottery.manager.event.LotteryRewardEvent;
 import com.example.minicash.lottery.model.ClaimDBResult;
+import com.example.minicash.lottery.model.PrizeSettingType;
 import com.example.minicash.lottery.model.RewardType;
 import com.example.minicash.lottery.util.ItemSerializer;
 import com.example.minicash.lottery.util.LotteryKeys;
@@ -24,13 +28,15 @@ public class LotteryClaimManager {
     private final JavaPlugin plugin;
     private final Economy economy;
 
+    private final LotteryConfigManager lotteryConfigManager;
     private final ClaimeTicketDatabase claimeTicketDatabase;
 
-    public LotteryClaimManager(JavaPlugin plugin, Economy economy,ClaimeTicketDatabase claimeTicketDatabase) {
+    public LotteryClaimManager(JavaPlugin plugin, Economy economy,ClaimeTicketDatabase claimeTicketDatabase,LotteryConfigManager lotteryConfigManager) {
 
         this.plugin = plugin;
         this.economy = economy;
         this.claimeTicketDatabase = claimeTicketDatabase;
+        this.lotteryConfigManager = lotteryConfigManager;
 
     }
 
@@ -62,14 +68,31 @@ public class LotteryClaimManager {
 
 
         String ticketUUID = pdc.get(LotteryKeys.TICKET_UUID, PersistentDataType.STRING);
+        String lottoID = pdc.get(LotteryKeys.LOTTO_ID, PersistentDataType.STRING);
         String sessionID = pdc.get(LotteryKeys.PACK_SESSION_ID, PersistentDataType.STRING);
         Integer group = pdc.get(LotteryKeys.LOTTO_GROUP, PersistentDataType.INTEGER);
         Integer number = pdc.get(LotteryKeys.LOTTO_NUMBER, PersistentDataType.INTEGER);
 
-        if (ticketUUID == null || sessionID == null || group == null || number == null) {
+        if (ticketUUID == null || sessionID == null || lottoID == null || group == null || number == null) {
             player.sendMessage(Component.text("不明な宝くじチケットです", NamedTextColor.RED));
             return;
         }
+
+
+        LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(lottoID);
+
+        if (lotteryConfig == null) {
+
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("該当する宝くじの設定データが存在しないため、換金できません", NamedTextColor.RED)
+            ));
+
+            plugin.getLogger().warning("プレイヤー " + player.getName() + " が存在しない lottoID (" + lottoID + ") のチケットを換金しようとしました");
+
+            return;
+
+        }
+
 
         claimeTicketDatabase.claimTicket(player,ticketUUID,sessionID,group,number,item).thenAccept(result -> {
 
@@ -81,7 +104,41 @@ public class LotteryClaimManager {
 
                     case SUCCESS -> {
 
+                        PrizeSettingType prizeSetting = lotteryConfig.getPrizeType();
+
+                        if (prizeSetting == PrizeSettingType.NO) {
+                            item.setAmount(item.getAmount() - 1);
+                            return;
+                        }
+
+
+                        LotteryRewardEvent lotteryRewardEvent = new LotteryRewardEvent(
+                                player,
+                                result.getRewardType(),
+                                result.getRewardValue(),
+                                ticketUUID,
+                                sessionID,
+                                group,
+                                number,
+                                item
+                        );
+
+                        Bukkit.getPluginManager().callEvent(lotteryRewardEvent);
+
+
                         item.setAmount(item.getAmount() -1);
+
+                        if (prizeSetting == PrizeSettingType.EVENT) {
+                            return;
+                        }
+
+
+                        if(lotteryRewardEvent.isSuppressDefaultReward()){
+                            return;
+                        }
+
+
+
 
                         RewardType type = result.getRewardType();
                         String rawValue = result.getRewardValue();

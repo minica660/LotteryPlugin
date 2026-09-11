@@ -53,14 +53,16 @@ public class LotteryManager {
      */
     public NormalResponse startLotto(LotteryConfig lotteryConfig) {
 
+        if (lotteryConfig == null) {
+            return new NormalResponse(false, "指定された宝くじの設定が不明です");
+        }
+
         if (isSessionActive()) {
             return new NormalResponse(false, "既に宝くじが開催されているため宝くじ" + lotteryConfig.getDisplayName() + "をスタートさせることが出来ません");
         }
 
 
-        if(lottoBukkitTask != null){
-            lottoBukkitTask.cancel();
-        }
+        stopBukkitTask();
 
 
         String sessionID = UUID.randomUUID().toString();
@@ -80,6 +82,9 @@ public class LotteryManager {
 
                     scheduleEndTask(session, lotteryConfig);
 
+                    startBukkitTask(activeLotterySession,lotteryConfig);
+
+
                     Bukkit.getOnlinePlayers().forEach(player -> {
 
                         player.showBossBar(lotteryConfig.getBossBar());
@@ -87,7 +92,6 @@ public class LotteryManager {
                     });
 
 
-                    startBukkitTask(activeLotterySession,lotteryConfig);
 
 
                     plugin.getLogger().info("宝くじ「" + lotteryConfig.getDisplayName() + "」を開催しました！ ID: " + sessionID);
@@ -101,6 +105,11 @@ public class LotteryManager {
             });
 
 
+        }).exceptionally(ex ->{
+
+            plugin.getLogger().severe(ex.getMessage());
+
+            return null;
         });
 
 

@@ -130,7 +130,7 @@ public class LotteryAdminCommandHandler {
                 .thenAccept(totalSales -> runMainThred(() -> {
 
                     sendPlayerMessage(sender, Component.text("現在の売上総額: ", NamedTextColor.GRAY)
-                            .append(Component.text(String.format("%,.0f円", totalSales), NamedTextColor.YELLOW)));
+                            .append(Component.text(String.format("%d 円", totalSales), NamedTextColor.YELLOW)));
 
                 }))
                 .exceptionally(ex -> {
@@ -218,31 +218,37 @@ public class LotteryAdminCommandHandler {
 
     }
 
-    public int handleSpawnShopVillager(CommandContext<CommandSourceStack> ctx){
+    public int handleSpawnShopVillager(CommandContext<CommandSourceStack> ctx) {
 
         CommandSender sender = ctx.getSource().getSender();
 
-        ShopType shopType = ShopType.valueOf(ctx.getArgument("shoptype", String.class));
+        ShopType shopType;
 
-        if(shopType == null){
+        try {
+
+            shopType = ShopType.valueOf(ctx.getArgument("shoptype", String.class));
+
+        } catch (IllegalArgumentException e) {
             sender.sendMessage(Lottery.getMessage(
-                    Component.text("ショップタイプが不明です",NamedTextColor.RED)
+                    Component.text("ショップタイプが不明です", NamedTextColor.RED)
             ));
             return 0;
         }
 
-        if(sender instanceof  Player player){
 
-            villagerShop.spawnVillager(player.getLocation(),shopType);
+
+        if (sender instanceof Player player) {
+
+            villagerShop.spawnVillager(player.getLocation(), shopType);
 
             player.sendMessage(Lottery.getMessage(
-                    Component.text(shopType.getDisplayName() + "をスポーンさせました",NamedTextColor.GOLD)
+                    Component.text(shopType.getDisplayName() + "をスポーンさせました", NamedTextColor.GOLD)
             ));
 
 
-        }else {
+        } else {
             sender.sendMessage(Lottery.getMessage(
-                    Component.text("このコマンドはプレイヤーのみ実行可能です",NamedTextColor.RED)
+                    Component.text("このコマンドはプレイヤーのみ実行可能です", NamedTextColor.RED)
             ));
         }
 

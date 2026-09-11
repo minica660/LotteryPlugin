@@ -59,7 +59,7 @@ public class LotteryConfig {
         this.bossBarTitle = config.getString("bossbar.title","宝くじ！！");
         this.bossBar = BossBar.bossBar(
                 Component.text(bossBarTitle),
-                15.0f,
+                1.0f,
                 BossBar.Color.valueOf(config.getString("bossbar.color","RED")),
                 BossBar.Overlay.valueOf(config.getString("bossbar.style","NOTCHED_16"))
         );

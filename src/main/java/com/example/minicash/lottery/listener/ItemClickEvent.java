@@ -42,13 +42,13 @@ public class ItemClickEvent implements Listener {
             return;
         }
 
-        if (event.getAction() != Action.RIGHT_CLICK_AIR || event.getAction() != Action.RIGHT_CLICK_BLOCK){
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK){
             return;
         }
 
         ItemStack item = event.getItem();
 
-        if(item == null){
+        if(item == null || !item.hasItemMeta()){
             return;
         }
 

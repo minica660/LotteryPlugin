@@ -24,12 +24,11 @@ public class ActiveDatabase {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String deactivateSql = "UPDATE `active_lottery_pool` SET `is_active` = FALSE WHERE `is_active` = TRUE;";
-
+            String deactivateSql = "UPDATE `active_lottery_pool` SET `is_active` = FALSE WHERE `is_active` = TRUE";
             String insertSql = """
-                        INSERT INTO `active_lottery_pool` (`session_id`, `lotto_id`, `total_sales`, `start_time`, `end_time`, `is_active`)
-                        VALUES (?, ?, 0, ?, ?, TRUE);
-                    """;
+                    INSERT INTO `active_lottery_pool` (`session_id`, `lotto_id`, `total_sales`, `start_time`, `end_time`, `is_active`)
+                    VALUES (?, ?, 0, ?, ?, TRUE)
+                """;
 
             try (Connection connection = hikariDataSource.getConnection()) {
 
@@ -60,7 +59,7 @@ public class ActiveDatabase {
                     e.printStackTrace();
                     return false;
                 } finally {
-                    connection.setAutoCommit(true);
+                    connection.setAutoCommit(false);
                 }
 
             } catch (SQLException e) {

@@ -1,5 +1,6 @@
 package com.example.minicash.lottery.manager.gui;
 
+import com.example.minicash.lottery.Lottery;
 import com.example.minicash.lottery.data.ActiveLotterySession;
 import com.example.minicash.lottery.data.LotteryConfig;
 import com.example.minicash.lottery.manager.LotteryManager;
@@ -32,21 +33,30 @@ public class LotteryGUI {
 
     public void openLottoGUI(Player player) {
 
-        LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(lotteryManager.getActiveLotterySession().getLottoId());
+        if(lotteryManager.isSessionActive()) {
 
-        Inventory inventory = Bukkit.createInventory(new LotteryGUIHolder(), 9, TITLE);
+            LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(lotteryManager.getActiveLotterySession().getLottoId());
+
+            Inventory inventory = Bukkit.createInventory(new LotteryGUIHolder(), 9, TITLE);
 
 
-        // 単品
-        inventory.setItem(2, createGUIItem(Material.PAPER, Component.text("単品購入", NamedTextColor.GREEN).decorate(TextDecoration.BOLD), List.of(Component.text(" 枚数を指定して購入できます！ ", NamedTextColor.AQUA))));
+            // 単品
+            inventory.setItem(2, createGUIItem(Material.PAPER, Component.text("単品購入", NamedTextColor.GREEN).decorate(TextDecoration.BOLD), List.of(Component.text(" 枚数を指定して購入できます！ ", NamedTextColor.AQUA))));
 
-        // バラ
-        inventory.setItem(4, createGUIItem(Material.PAPER, Component.text("バラ購入( " + lotteryConfig.getBulkPurchaseAmount() + "枚 )", NamedTextColor.YELLOW).decorate(TextDecoration.BOLD), List.of(Component.text("ランダムな番号のセット", NamedTextColor.AQUA))));
+            // バラ
+            inventory.setItem(4, createGUIItem(Material.PAPER, Component.text("バラ購入( " + lotteryConfig.getBulkPurchaseAmount() + "枚 )", NamedTextColor.YELLOW).decorate(TextDecoration.BOLD), List.of(Component.text("ランダムな番号のセット", NamedTextColor.AQUA))));
 
-        // 連番
-        inventory.setItem(6, createGUIItem(Material.BOOK, Component.text("連番購入( " + lotteryConfig.getBulkPurchaseAmount() + "枚 )", NamedTextColor.DARK_BLUE).decorate(TextDecoration.BOLD), List.of(Component.text(" 一連の連続した番号のセット ", NamedTextColor.AQUA))));
+            // 連番
+            inventory.setItem(6, createGUIItem(Material.BOOK, Component.text("連番購入( " + lotteryConfig.getBulkPurchaseAmount() + "枚 )", NamedTextColor.DARK_BLUE).decorate(TextDecoration.BOLD), List.of(Component.text(" 一連の連続した番号のセット ", NamedTextColor.AQUA))));
 
-        player.openInventory(inventory);
+            player.openInventory(inventory);
+
+
+        }else {
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("宝くじは現在準備中だよ！",NamedTextColor.RED)
+            ));
+        }
 
 
     }

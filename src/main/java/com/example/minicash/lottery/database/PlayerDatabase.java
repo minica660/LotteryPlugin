@@ -24,13 +24,13 @@ public class PlayerDatabase {
 
             String selectSql = """
                         SELECT `ticket_count` FROM `player_purchase_counts`
-                        WHERE `session_id` = ? AND `player_uuid` = ?;
+                        WHERE `session_id` = ? AND `player_uuid` = ?
                     """;
 
             String insertSql = """
                         INSERT INTO `player_purchase_counts` (`session_id`, `player_uuid`, `ticket_count`)
                         VALUES (?, ?, ?)
-                        ON DUPLICATE KEY UPDATE `ticket_count` = `ticket_count` + VALUES(`ticket_count`);
+                        ON DUPLICATE KEY UPDATE `ticket_count` = `player_purchase_counts`.`ticket_count` + VALUES(`ticket_count`)
                     """;
 
             try (Connection connection = hikariDataSource.getConnection()) {

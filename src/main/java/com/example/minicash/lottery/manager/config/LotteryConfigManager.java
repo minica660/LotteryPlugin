@@ -23,9 +23,9 @@ public class LotteryConfigManager {
 
 
     /**
-     * raidsフォルダ内の全ファイルからデータを読み取ります
+     * lotteriesフォルダ内の全ファイルからデータを読み取ります
      */
-    public void loadAllRaidConfig() {
+    public void loadAllLotteryConfig() {
 
         lotteryConfigs.clear();
 
@@ -34,8 +34,10 @@ public class LotteryConfigManager {
         // フォルダが存在しない場合は作成し、サンプルファイルを保存
         if (!lottoFolder.exists()) {
             lottoFolder.mkdirs();
-            plugin.saveResource("lotteries/sample.yml", false);
         }
+
+        plugin.saveResource("lotteries/sample.yml", false);
+
 
         File[] files = lottoFolder.listFiles((directory, name) -> name.endsWith(".yml"));
 
@@ -52,7 +54,7 @@ public class LotteryConfigManager {
             LotteryConfig lotteryConfig = new LotteryConfig(raidId, config);
             lotteryConfigs.put(raidId, lotteryConfig);
 
-            plugin.getLogger().info("レイド設定を読み込みました: " + raidId);
+            plugin.getLogger().info("宝くじ設定を読み込みました: " + raidId);
         }
 
     }

@@ -14,6 +14,7 @@ import com.example.minicash.lottery.manager.LotteryPurchaseManager;
 import com.example.minicash.lottery.manager.config.LotteryConfigManager;
 import com.example.minicash.lottery.manager.gui.LotteryGUI;
 import com.example.minicash.lottery.manager.shop.VillagerShop;
+import com.example.minicash.lottery.util.LotteryKeys;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -58,12 +59,17 @@ public final class Lottery extends JavaPlugin {
             return;
         }
 
+        saveDefaultConfig();
+
 
         lotteryConfigManager = new LotteryConfigManager(this);
-        lotteryConfigManager.loadAllRaidConfig();
+        lotteryConfigManager.loadAllLotteryConfig();
 
 
         this.dbSetup = new Setup(this);
+
+        dbSetup.connect();
+
         this.activeDatabase = new ActiveDatabase(dbSetup.getHikariSource());
         this.claimeTicketDatabase = new ClaimeTicketDatabase(this,dbSetup.getHikariSource());
         this.lotteryResultDatabase = new LotteryResultDatabase(dbSetup.getHikariSource());
@@ -71,12 +77,18 @@ public final class Lottery extends JavaPlugin {
 
 
         this.lotteryManager = new LotteryManager(this, activeDatabase , lotteryResultDatabase , lotteryConfigManager);
-        this.lotteryClaimManager = new LotteryClaimManager(this,economy ,claimeTicketDatabase);
+        this.lotteryClaimManager = new LotteryClaimManager(this,economy ,claimeTicketDatabase,lotteryConfigManager);
         this.lotteryPurchaseManager = new LotteryPurchaseManager(economy , this , activeDatabase , playerDatabase , lotteryManager);
 
         this.lotteryGUI = new LotteryGUI(lotteryManager,lotteryConfigManager);
 
         this.villagerShop = new VillagerShop(this);
+
+
+        this.adminCommandHandler = new LotteryAdminCommandHandler(this,lotteryManager,activeDatabase,playerDatabase,lotteryConfigManager,villagerShop);
+        this.lotteryAdminCommand = new LotteryAdminCommand(adminCommandHandler,lotteryConfigManager);
+
+        new LotteryKeys(this);
 
         PluginManager pluginManager = getServer().getPluginManager();
 

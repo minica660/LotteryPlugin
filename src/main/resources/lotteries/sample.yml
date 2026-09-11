@@ -15,7 +15,7 @@ duration-minutes: 10080 # 7日間
 claim-expiry-days: 7    # 抽選から何日間その宝くじの交換が可能か(日)
 bossbar:
   title: "§6§l[サンプルジャンボ宝くじ]   抽選まで: %time% "
-  color: "GOLD"
+  color: "BLUE"
   style: "NOTCHED_12"
 
 

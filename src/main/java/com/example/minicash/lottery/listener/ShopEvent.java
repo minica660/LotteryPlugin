@@ -58,11 +58,11 @@ public class ShopEvent implements Listener {
 
         player.sendMessage(
                 Component.text(shopType.getDisplayName()).append(
-                        Component.text("いらっしゃいませ！", NamedTextColor.GOLD)
+                        Component.text(" いらっしゃいませ！", NamedTextColor.GOLD)
                 )
         );
 
-        Sound sound = Sound.sound(Key.key("entity.villager.celebrat"), Sound.Source.MASTER, 20f, 1.3f);
+        Sound sound = Sound.sound(Key.key("entity.villager.yes"), Sound.Source.MASTER, 100f, 1.3f);
 
         player.playSound(sound);
 

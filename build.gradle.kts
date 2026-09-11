@@ -14,6 +14,10 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("com.github.minica660.MiniCashLibrary:common:1.1.2")
+    compileOnly("com.github.minica660.MiniCashLibrary:paper:1.1.2")
+
+    compileOnly("com.zaxxer:HikariCP:7.1.0")
+
 }
 
 java {
@@ -35,7 +39,7 @@ tasks {
 
     processResources {
         val props = mapOf("version" to version)
-        filesMatching("plugin.yml") {
+        filesMatching("paper-plugin.yml") {
             expand(props)
         }
     }

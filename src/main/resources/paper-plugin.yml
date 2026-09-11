@@ -1,0 +1,18 @@
+name: Lottery
+version: '${version}'
+
+main: com.example.minicash.lottery.Lottery
+api-version: '1.21.11'
+load: POSTWORLD
+authors:
+  - MiniCash
+description: 宝くじプラグイン！
+website: https://github.com/minica660/LotteryPlugin
+loader: com.example.minicash.lottery.MPluginLoader
+
+dependencies:
+  server:
+    Vault:
+      load: BEFORE
+      required: false
+      join-classpath: true

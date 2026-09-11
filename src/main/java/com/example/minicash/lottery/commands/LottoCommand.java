@@ -72,6 +72,8 @@ public class LottoCommand implements BasicCommand {
 
                         lotteryGUI.openLottoGUI(player);
 
+                        return;
+
                     }
                     case "claim" -> {
 
@@ -103,11 +105,21 @@ public class LottoCommand implements BasicCommand {
 
                             String ticketType = args[1];
 
-                            LottoType lottoType = LottoType.valueOf(ticketType);
+                            LottoType lottoType;
 
-                            if(lottoType == null){
+                            try {
+
+                                lottoType = LottoType.valueOf(ticketType);
+
+                            } catch (IllegalArgumentException e) {
+                                player.sendMessage(Lottery.getMessage(
+                                        Component.text("購入タイプが不明です",NamedTextColor.RED)
+                                ));
+
                                 return;
                             }
+
+
 
                             LotteryConfig lotteryConfig = lotteryConfigManager.getLotteryConfig(lotteryManager.getActiveLotterySession().getLottoId());
 
@@ -149,6 +161,31 @@ public class LottoCommand implements BasicCommand {
 
                         if (!lotteryManager.isSessionActive()) {
 
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text("========== 宝くじ開催情報！ ==========", NamedTextColor.YELLOW).decorate(TextDecoration.BOLD)
+                            ));
+
+
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text("")
+                            ));
+
+
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text("    宝くじ準備中！    ", NamedTextColor.DARK_PURPLE).decorate(TextDecoration.BOLD)
+
+                            ));
+
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text("")
+                            ));
+
+
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text("==============================", NamedTextColor.YELLOW).decorate(TextDecoration.BOLD)
+                            ));
+
+                            return;
 
                         }
 
@@ -192,7 +229,7 @@ public class LottoCommand implements BasicCommand {
                         ));
 
                         player.sendMessage(Lottery.getMessage(
-                                Component.text("残り時間：", NamedTextColor.GRAY)
+                                Component.text("開催中の宝くじ情報：", NamedTextColor.GRAY)
                                         .append(Component.text("宝くじ屋村人を右クリック！", NamedTextColor.WHITE).decorate(TextDecoration.BOLD))
                         ));
 
