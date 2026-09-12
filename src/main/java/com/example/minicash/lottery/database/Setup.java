@@ -63,11 +63,11 @@ public class Setup {
 
             plugin.getLogger().info("Mysqlデータベースへの接続が完了しました");
 
-            NormalResponse result =  setupTable();
+            NormalResponse result = setupTable();
 
-            if(result.isSuccess()){
+            if (result.isSuccess()) {
                 plugin.getLogger().info("テーブルの設定が完了しました");
-            }else {
+            } else {
                 plugin.getLogger().severe(result.getMessage());
             }
 
@@ -105,12 +105,11 @@ public class Setup {
                 """;
 
         String playerPurchaseCounts = """
-                
                     CREATE TABLE IF NOT EXISTS `player_purchase_counts` (
-                    `session_id` VARCHAR(64) NOT NULL,
-                    `player_uuid` VARCHAR(36) NOT NULL,
-                    `ticket_count` INT NOT NULL
-
+                        `session_id` VARCHAR(64) NOT NULL,
+                        `player_uuid` VARCHAR(36) NOT NULL,
+                        `ticket_count` INT NOT NULL,
+                        PRIMARY KEY (`session_id`, `player_uuid`)
                     );
                 """;
 
@@ -124,7 +123,7 @@ public class Setup {
                     `reward_type` VARCHAR(16) NOT NULL,
                     `reward_value` LONGTEXT NOT NULL,
                     `expiry_time` TIMESTAMP NOT NULL
-
+                
                     );
                 """;
 
@@ -134,7 +133,7 @@ public class Setup {
                     CREATE TABLE IF NOT EXISTS `claimed_tickets` (
                     `ticket_uuid` VARCHAR(36) NOT NULL,
                     `claimed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
+                
                     );
                 """;
 
@@ -151,15 +150,14 @@ public class Setup {
 
             plugin.getLogger().info("bank_itemsテーブルを作成しました");
 
-            return new NormalResponse(true,"正常にテーブル作成完了");
+            return new NormalResponse(true, "正常にテーブル作成完了");
 
         } catch (SQLException e) {
 
             plugin.getLogger().log(Level.SEVERE, "DBのテーブル生成中にエラーが発生しました", e);
 
-            return new NormalResponse(false,e.getMessage());
+            return new NormalResponse(false, e.getMessage());
         }
-
 
 
     }

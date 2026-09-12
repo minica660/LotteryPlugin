@@ -4,7 +4,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 public enum ShopType {
 
-    SHOP("shop", "宝くじ販売屋", NamedTextColor.GOLD, "lotto gui", " いらっしゃい！"),
+    SHOP("shop", "宝くじ販売屋", NamedTextColor.GOLD, "lotto gui", " 好きな宝くじのタイプから選んでくれ！"),
     CLAIM("claim", "宝くじ換金所", NamedTextColor.GREEN, "lotto claim", " アイテム調べ中・・・"),
     INFO("info", "宝くじ案内所", NamedTextColor.AQUA, "lotto info", " 現在の宝くじ開催状況はこちらだよ！");
 

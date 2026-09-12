@@ -11,6 +11,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,6 +24,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
+import java.util.Map;
 
 public class ItemClickEvent implements Listener {
 
@@ -91,18 +93,37 @@ public class ItemClickEvent implements Listener {
             // 手のアイテムを1つ減らす
             item.setAmount(item.getAmount() - 1);
 
+            if (!hasEnoughEmptySlots(player,ticketAmount)){
+                player.sendMessage(Lottery.getMessage(
+                        Component.text("インベントリに空きがありません！", NamedTextColor.RED)
+                ));
+                return;
+            }
+
+
             List<ItemStack> lottoItems = LotteryTicketGenerator.generateTickets(lotteryConfig ,sessionId ,lottoType,ticketAmount);
 
             lottoItems.forEach(itemStack -> {
 
-                if(LotteryPurchaseManager.hasEmptySlot(player)){
-                    player.getInventory().addItem(itemStack);
+                Map<Integer, ItemStack> leftover = player.getInventory().addItem(itemStack);
+
+                if (!leftover.isEmpty()) {
+
+                    leftover.values().forEach(dropItem ->
+                            player.getWorld().dropItemNaturally(player.getLocation(), dropItem)
+                    );
+
+                    player.sendMessage(Lottery.getMessage(
+                            Component.text("インベントリに空きがないため宝くじチケットをドロップさせました！", NamedTextColor.DARK_PURPLE)
+                    ));
+
                 }
+
 
             });
 
 
-            Sound sound = Sound.sound(Key.key("entity.item.pickup"), Sound.Source.PLAYER, 1f, 1f);
+            Sound sound = Sound.sound(Key.key("entity.player.levelup"), Sound.Source.MASTER, 200f, 1.6f);
 
             player.playSound(sound);
 
@@ -113,6 +134,37 @@ public class ItemClickEvent implements Listener {
 
 
         }
+    }
+
+
+    /**
+     * プレイヤーのインベントリに指定した数以上の完全な空きスロットがあるかを確認
+     *
+     * @param player 対象のプレイヤー
+     * @param requiredSlots 必要な空きスロット数
+     * @return 空きスロット数が足りている場合は true
+     */
+    public static boolean hasEnoughEmptySlots(Player player, int requiredSlots) {
+
+        if (requiredSlots <= 0) {
+            return true;
+        }
+
+        int emptyCount = 0;
+
+
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+
+            if (item == null || item.getType() == Material.AIR) {
+                emptyCount++;
+                if (emptyCount >= requiredSlots) {
+                    return true;
+                }
+            }
+
+        }
+
+        return false;
     }
 
 

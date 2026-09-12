@@ -18,10 +18,17 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class ShopEvent implements Listener {
 
     private final JavaPlugin plugin;
     private final VillagerShop villagerShop;
+
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private static final long COOLDOWN_TIME_MS = 5000;
 
     public ShopEvent(JavaPlugin plugin,VillagerShop villagerShop) {
         this.plugin = plugin;
@@ -55,6 +62,16 @@ public class ShopEvent implements Listener {
 
 
         event.setCancelled(true);
+
+        long currentTime = System.currentTimeMillis();
+        long lastClick = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+
+        if (currentTime - lastClick < COOLDOWN_TIME_MS) {
+            return;
+        }
+
+        cooldowns.put(player.getUniqueId(), currentTime);
+
 
         player.sendMessage(
                 Component.text(shopType.getDisplayName()).append(

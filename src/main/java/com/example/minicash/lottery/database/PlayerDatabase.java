@@ -30,7 +30,7 @@ public class PlayerDatabase {
             String insertSql = """
                         INSERT INTO `player_purchase_counts` (`session_id`, `player_uuid`, `ticket_count`)
                         VALUES (?, ?, ?)
-                        ON DUPLICATE KEY UPDATE `ticket_count` = `player_purchase_counts`.`ticket_count` + VALUES(`ticket_count`)
+                        AS new_val ON DUPLICATE KEY UPDATE `ticket_count` = `ticket_count` + new_val.`ticket_count`
                     """;
 
             try (Connection connection = hikariDataSource.getConnection()) {

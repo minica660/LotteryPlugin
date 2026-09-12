@@ -165,7 +165,7 @@ public class ActiveDatabase {
             try (Connection connection = hikariDataSource.getConnection();
                  PreparedStatement stmt = connection.prepareStatement(updateSql)) {
 
-                stmt.setDouble(1, amount);
+                stmt.setInt(1, amount);
                 stmt.setString(2, sessionID);
 
                 int updatedRows = stmt.executeUpdate();

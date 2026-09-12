@@ -182,9 +182,21 @@ public class LotteryClaimManager {
 
 
                     }
-                    case PENDING , EXPIRED , LOSE ->{
+                    case PENDING , EXPIRED  ->{
 
                         player.sendMessage(Lottery.getMessage(result.getcMessage()));
+
+                    }
+                    case LOSE -> {
+
+
+                        player.sendMessage(Lottery.getMessage(result.getcMessage()));
+
+                        item.setAmount(item.getAmount() - 1);
+
+                        player.sendMessage(Lottery.getMessage(
+                                Component.text("ハズレ券だったため対象券を回収しました")
+                        ));
 
                     }
                     case REDEEMED -> {

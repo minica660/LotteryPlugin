@@ -5,6 +5,8 @@ import com.example.minicash.lottery.data.ActiveLotterySession;
 import com.example.minicash.lottery.data.LotteryConfig;
 import com.example.minicash.lottery.database.ActiveDatabase;
 import com.example.minicash.lottery.database.PlayerDatabase;
+import com.example.minicash.lottery.manager.event.LotteryChargeEvent;
+import com.example.minicash.lottery.manager.event.LotteryRefundEvent;
 import com.example.minicash.lottery.model.LottoType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -72,6 +74,13 @@ public class LotteryPurchaseManager {
             }
         }
 
+        if(!hasEmptySlot(player)){
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("インベントリに空きがありません！",NamedTextColor.RED)
+            ));
+            return;
+        }
+
 
 
         playerDatabase.getTicketCount(player.getUniqueId(), sessionID).thenAccept(count -> {
@@ -92,39 +101,53 @@ public class LotteryPurchaseManager {
 
                 int totalPrice = lotteryConfig.getTicketPrice() * amount;
 
-                if (!economy.has(player, totalPrice)) {
+                LotteryChargeEvent lotteryChargeEvent = new LotteryChargeEvent(player,totalPrice,sessionID);
 
-                    player.sendMessage(Lottery.getMessage(
-                            Component.text("所持金が足りません（必要額: " + totalPrice + "円）", NamedTextColor.RED)
-                    ));
+                if(this.economy != null) {
 
-                    return;
+                    if (economy.has(player,totalPrice)) {
+
+                        EconomyResponse economyResponse = economy.withdrawPlayer(player,totalPrice);
+
+                        if(economyResponse.transactionSuccess()){
+                            lotteryChargeEvent.setPaymentSuccess(true);
+                        }else{
+                            lotteryChargeEvent.setErrorMessage(Lottery.getMessage(
+                                    Component.text("決済に失敗しました: " + economyResponse.errorMessage, NamedTextColor.RED)));
+                        }
+
+                    }else {
+                        lotteryChargeEvent.setErrorMessage(Lottery.getMessage(
+                                Component.text("所持金が足りません（必要額: " + totalPrice + "円）", NamedTextColor.RED)));
+                    }
 
                 }
 
-                if (!hasEmptySlot(player)) {
-                    player.sendMessage(Lottery.getMessage(
-                            Component.text("インベントリに空きがありません！", NamedTextColor.RED)
-                    ));
+                Bukkit.getPluginManager().callEvent(lotteryChargeEvent);
+
+
+                if(!lotteryChargeEvent.isPaymentSuccess()){
+
+                    Component errorMessage = lotteryChargeEvent.getErrorMessage() != null ?
+                            lotteryChargeEvent.getErrorMessage() : Lottery.getMessage(Component.text("決済処理が行われなかったため購入できません",NamedTextColor.RED));
+
+                    player.sendMessage(errorMessage);
+
                     return;
                 }
 
-                EconomyResponse economyResponse = economy.withdrawPlayer(player, totalPrice);
-                if (!economyResponse.transactionSuccess()) {
-                    player.sendMessage(Lottery.getMessage(
-                            Component.text("決済に失敗しました: " + economyResponse.errorMessage, NamedTextColor.RED)
-                    ));
-                    return;
-                }
 
-                activeDatabase.addTotalMoney(sessionID, totalPrice);
+
+
+
+
                 playerDatabase.addTicket(player.getUniqueId(), sessionID, amount, lotteryConfig.getMaxTicketsPerPlayer()).thenAccept(result ->{
 
                     Bukkit.getScheduler().runTask(plugin ,() ->{
 
                         if(!result.isSuccess()){
 
-                            economy.depositPlayer(player,totalPrice);
+                           executeRefund(player,totalPrice,"DATABASE_SAVE_ERROR",sessionID);
 
                             player.sendMessage(Lottery.getMessage(
                                     Component.text("購入処理中にエラーが発生したため処理を停止しました",NamedTextColor.RED)
@@ -134,6 +157,30 @@ public class LotteryPurchaseManager {
 
                             return;
                         }
+
+
+
+                        activeDatabase.addTotalMoney(sessionID, totalPrice).thenAccept(response -> {
+
+                            if (!response.isSuccess()) {
+
+
+                                plugin.getLogger().warning("売上金の加算に失敗しました [セッション: " + sessionID + "]: " + response.getMessage());
+
+                            }
+
+                        }).exceptionally(ex -> {
+
+
+
+                            plugin.getLogger().log(Level.SEVERE, "LotteryPurchaseManager.addTotalMoney実行中に予期せぬエラーが発生しました", ex);
+
+                            return null;
+
+                        });
+
+
+
 
                         if (lottoType == LottoType.RANDOM || lottoType == LottoType.CONSECUTIVE) {
 
@@ -201,9 +248,14 @@ public class LotteryPurchaseManager {
 
                 }).exceptionally(ex ->{
 
+                    Bukkit.getScheduler().runTask(plugin,() -> {
+                        executeRefund(player,totalPrice,"ASYNC_EXCEPTION",sessionID);
+                    });
+
                     player.sendMessage(Lottery.getMessage(
                             Component.text(ex.getMessage(), NamedTextColor.RED)
                     ));
+
 
                     plugin.getLogger().log(Level.SEVERE,"buyLotメソッド内でエラーが発生しました " , ex);
 
@@ -211,6 +263,8 @@ public class LotteryPurchaseManager {
                     return null;
 
                 });
+
+
 
 
             });
@@ -234,6 +288,43 @@ public class LotteryPurchaseManager {
         return player.getInventory().firstEmpty() != -1;
     }
 
+
+    /**
+     * 購入処理中だけじゃなくてもどこからでも呼び出せます
+     * 特殊な返金処理をやりたいとき用
+     */
+    public boolean executeRefund(Player player, int amount , String reason , String sessionID){
+
+        LotteryRefundEvent refundEvent = new LotteryRefundEvent(player,sessionID , amount , reason);
+
+        if(this.economy != null){
+
+            EconomyResponse economyResponse = economy.depositPlayer(player, amount);
+
+            if(economyResponse.transactionSuccess()) {
+                refundEvent.setRefundSuccess(true);
+            }else {
+                refundEvent.setErrorMessage(Lottery.getMessage(Component.text("Vaultでの返金に失敗しました" + economyResponse.errorMessage)));
+            }
+
+
+        }
+
+        Bukkit.getPluginManager().callEvent(refundEvent);
+
+
+        if(!refundEvent.isRefundSuccess()){
+            plugin.getLogger().severe(player.getName() + "への返金処理に失敗しました：" + amount + "円" + "理由：" +
+                    (refundEvent.getErrorMessage() != null ? refundEvent.getErrorMessage() : "未定義のエラー"));
+            return false;
+        }
+
+
+        return true;
+
+
+
+    }
 
 
 
