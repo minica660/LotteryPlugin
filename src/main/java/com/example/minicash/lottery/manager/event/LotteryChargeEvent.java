@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class LotteryChargeEvent extends Event {
 
-    private final HandlerList handlerList = new HandlerList();
+    private static final HandlerList handlerList = new HandlerList();
 
     private final Player player;
     private final int totalMoney;
@@ -60,6 +60,10 @@ public class LotteryChargeEvent extends Event {
 
     @Override
     public @NotNull HandlerList getHandlers() {
-        return null;
+        return handlerList;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlerList;
     }
 }

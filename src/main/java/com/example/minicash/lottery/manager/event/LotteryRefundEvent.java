@@ -63,6 +63,11 @@ public class LotteryRefundEvent extends Event {
 
     @Override
     public @NotNull HandlerList getHandlers() {
-        return null;
+        return handlerList;
     }
+
+    public static HandlerList getHandlerList() {
+        return handlerList;
+    }
+
 }
