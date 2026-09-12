@@ -21,6 +21,9 @@
 
 # 基本設定
 display-name: "§3§lサンプルジャンボ宝くじ！"
+resourcepack-key: lotto   # リソースパックキー
+single-ticket: single-ticket  # チケットでのテクスチャ(item_model)
+pack-ticket: pack-ticket  # 封がされたパック状態でのテクスチャ(item_model)
 
 # 購入に関する設定
 ticket-price: 500   # 1枚当たりの価格
@@ -43,6 +46,7 @@ bossbar:
 # 賞金配分と当選モードの設定
 prize-settings:
   type: NORMAL
+  fixed-total-return-money: -1  # 売り上げ額からではなく指定した合計額から報酬を渡しましす
   total-return-rate: 0.70   # 売上額の何%をプレイヤーに還元するかどうか
 
   distribution:
