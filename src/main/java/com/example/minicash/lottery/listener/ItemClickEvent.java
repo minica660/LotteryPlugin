@@ -90,15 +90,16 @@ public class ItemClickEvent implements Listener {
             }
 
 
-            // 手のアイテムを1つ減らす
-            item.setAmount(item.getAmount() - 1);
-
             if (!hasEnoughEmptySlots(player,ticketAmount)){
                 player.sendMessage(Lottery.getMessage(
                         Component.text("インベントリに空きがありません！", NamedTextColor.RED)
                 ));
                 return;
             }
+
+            // 手のアイテムを1つ減らす
+            item.setAmount(item.getAmount() - 1);
+
 
 
             List<ItemStack> lottoItems = LotteryTicketGenerator.generateTickets(lotteryConfig ,sessionId ,lottoType,ticketAmount);
