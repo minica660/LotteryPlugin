@@ -70,11 +70,21 @@ prize-settings:
 
 | コマンド | 説明 | 権限 |
 | :--- | :--- | :--- |
-| `/lottoadmin ` | 指定した宝くじを購入します | `lottery.commands..` |
+| `/lottoadmin start <lottoID>` | 指定した宝くじを開催します | `lottery.commands..` |
 | `/lottoadmin info` | 開催中の宝くじの売り上げ総額などの情報を表示させます | `lottery.use` |
 
 
 
 
+
+## トラブルシューティング
+
+
+
+
+
+
+## API情報/開発者向け情報（ Developer API ）
+
 ---
-© 2026 minica660
+
