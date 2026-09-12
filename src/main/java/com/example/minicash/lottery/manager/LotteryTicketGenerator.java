@@ -28,7 +28,7 @@ public class LotteryTicketGenerator {
                 int singleGroup = random.nextInt(maxGroup) + 1;
                 int singleNumber = random.nextInt(maxNumber + 1);
                 tickets.add(ItemManager.createSingleTicket(
-                        sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), singleGroup, singleNumber
+                        sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), lotteryConfig.getResourcePackKey() , lotteryConfig.getSingleTicketModel() , singleGroup, singleNumber
                 ));
                 break;
 
@@ -43,7 +43,7 @@ public class LotteryTicketGenerator {
                 for (int i = 0; i < packAmount; i++) {
                     int num = startNumber + i;
                     tickets.add(ItemManager.createSingleTicket(
-                            sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), consecutiveGroup, num
+                            sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), lotteryConfig.getResourcePackKey() , lotteryConfig.getSingleTicketModel() , consecutiveGroup, num
                     ));
                 }
                 break;
@@ -54,7 +54,7 @@ public class LotteryTicketGenerator {
                     int randGroup = random.nextInt(maxGroup) + 1;
                     int randNumber = random.nextInt(maxNumber + 1);
                     tickets.add(ItemManager.createSingleTicket(
-                            sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), randGroup, randNumber
+                            sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(),  lotteryConfig.getResourcePackKey() , lotteryConfig.getSingleTicketModel() ,randGroup, randNumber
                     ));
                 }
                 break;

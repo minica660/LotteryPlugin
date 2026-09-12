@@ -59,7 +59,9 @@ public class LotteryClaimManager {
         String ticketType = pdc.get(LotteryKeys.TICKET_TYPE, PersistentDataType.STRING);
         if (!"SINGLE".equals(ticketType)) {
 
-            player.sendMessage(Component.text("これは換金可能な宝くじアイテムではありません", NamedTextColor.RED));
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("これは換金可能な宝くじアイテムではありません", NamedTextColor.RED)
+            ));
 
             return;
 

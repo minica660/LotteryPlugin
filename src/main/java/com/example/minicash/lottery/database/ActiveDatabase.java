@@ -59,7 +59,7 @@ public class ActiveDatabase {
                     e.printStackTrace();
                     return false;
                 } finally {
-                    connection.setAutoCommit(false);
+                    connection.setAutoCommit(true);
                 }
 
             } catch (SQLException e) {

@@ -184,7 +184,7 @@ public class LotteryPurchaseManager {
 
                         if (lottoType == LottoType.RANDOM || lottoType == LottoType.CONSECUTIVE) {
 
-                            ItemStack packItem = ItemManager.createLotteryPack(sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName(), lottoType, amount);
+                            ItemStack packItem = ItemManager.createLotteryPack(sessionID, lotteryConfig.getLottoID(), lotteryConfig.getDisplayName() , lotteryConfig.getResourcePackKey() , lotteryConfig.getPackTicketModel(), lottoType, amount);
 
                             Map<Integer, ItemStack> leftover = player.getInventory().addItem(packItem);
 

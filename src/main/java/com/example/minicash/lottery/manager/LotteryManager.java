@@ -242,8 +242,13 @@ public class LotteryManager {
         activeDatabase.getTotalMoney(activeSession.getSessionId()).thenCompose(totalSales -> {
 
                     // 全体の賞金として渡せる額
-                    double totalPrizePool = totalSales * lotteryConfig.getTotalReturnRate();
+                    double totalPrizePool;
 
+                    if (lotteryConfig.isFixedReturnMoneyEnabled()) {
+                        totalPrizePool = lotteryConfig.getFixedTotalReturnMoney();
+                    } else {
+                        totalPrizePool = totalSales * lotteryConfig.getTotalReturnRate();
+                    }
 
                     return lotteryResultDatabase.createLotteryResult(activeSession, lotteryConfig, totalPrizePool);
 
@@ -338,7 +343,6 @@ public class LotteryManager {
      */
     public void startBukkitTask(ActiveLotterySession activeLottery , LotteryConfig lotteryConfig){
 
-        int count = 0;
 
         // BukkitTask処理
         lottoBukkitTask = Bukkit.getScheduler().runTaskTimer(plugin , new Runnable(){
@@ -352,6 +356,8 @@ public class LotteryManager {
                     stopBukkitTask();
                     return;
                 }
+
+                count++;
 
                 if (count == 3) {
 

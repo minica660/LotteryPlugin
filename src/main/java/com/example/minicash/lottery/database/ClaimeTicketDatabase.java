@@ -78,11 +78,19 @@ public class ClaimeTicketDatabase {
 
                             while (rs.next()) {
 
+                                RewardType rewardType;
+
+                                try {
+                                    rewardType = RewardType.valueOf(rs.getString("reward_type"));
+                                } catch (IllegalArgumentException e) {
+                                    return new ClaimResuponse(ClaimDBResult.ERROR , Component.text("タイプ取得中にエラーが発生しました",NamedTextColor.RED),null , null ,null);
+                                }
+
                                 results.add(new LotteryResultData(
                                         rs.getString("prize_type"),
                                         rs.getInt("win_group"),
                                         rs.getInt("win_number"),
-                                        RewardType.valueOf(rs.getString("reward_type")),
+                                        rewardType,
                                         rs.getString("reward_value"),
                                         rs.getTimestamp("expiry_time").toLocalDateTime()
                                 ));

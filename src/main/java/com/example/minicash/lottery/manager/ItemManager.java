@@ -5,6 +5,7 @@ import com.example.minicash.lottery.util.LotteryKeys;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -25,7 +26,7 @@ public class ItemManager {
      * @param packType   "CONSECUTIVE"(連番) または "RANDOM"(バラ)
      * @param ticketAmount パック内の枚数
      */
-    public static ItemStack createLotteryPack(String sessionID , String lottoID , String displayName, LottoType packType , int ticketAmount) {
+    public static ItemStack createLotteryPack(String sessionID , String lottoID , String displayName , String resourcePackKey , String itemModel, LottoType packType , int ticketAmount) {
 
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta itemMeta = item.getItemMeta();
@@ -42,6 +43,14 @@ public class ItemManager {
                 Component.text("種類: " + typeName, NamedTextColor.AQUA),
                 Component.text(displayName + "の宝くじが入った封(" + ticketAmount +"枚入り)")
         ));
+
+        if(!resourcePackKey.isEmpty()  && !itemModel.isEmpty()) {
+
+            NamespacedKey key = new NamespacedKey(resourcePackKey, itemModel);
+
+            itemMeta.setItemModel(key);
+
+        }
 
         PersistentDataContainer pdc = itemMeta.getPersistentDataContainer();
 
@@ -67,7 +76,7 @@ public class ItemManager {
      * @param group       組番号
      * @param number      くじ番号
      */
-    public static ItemStack createSingleTicket(String sessionID ,String lottoID , String displayName , int group, int number) {
+    public static ItemStack createSingleTicket(String sessionID ,String lottoID , String displayName , String resourcePackKey , String itemModel , int group, int number) {
 
         ItemStack item = new ItemStack(Material.PAPER);
 
@@ -83,6 +92,15 @@ public class ItemManager {
                 Component.text("組: " + group + "組", NamedTextColor.YELLOW),
                 Component.text("番号: " + String.format("%06d", number), NamedTextColor.WHITE)
         ));
+
+        if(!resourcePackKey.isEmpty()  && !itemModel.isEmpty()) {
+
+            NamespacedKey key = new NamespacedKey(resourcePackKey, itemModel);
+
+            itemMeta.setItemModel(key);
+
+        }
+
 
         PersistentDataContainer pdc = itemMeta.getPersistentDataContainer();
 

@@ -13,7 +13,11 @@ import java.util.Map;
 public class LotteryConfig {
 
     private final String lottoID;
+    private  final String resourcePackKey;
     private final String displayName;
+    private final String singleTicketModel;
+    private final String packTicketModel;
+
 
     // チケットに関する設定
     private final int ticketPrice;
@@ -35,6 +39,7 @@ public class LotteryConfig {
     // 賞金配分と当選モードの設定
     private final PrizeSettingType prizeType;
     private final double totalReturnRate;
+    private final int fixedTotalReturnMoney;
 
     private final List<PrizeReward> prizeList = new ArrayList<>();
 
@@ -45,6 +50,9 @@ public class LotteryConfig {
     public LotteryConfig(String lottoID , FileConfiguration config) {
 
         this.lottoID = lottoID;
+        this.resourcePackKey = config.getString("resourcepack-key","");
+        this.singleTicketModel = config.getString("single-ticket","");
+        this.packTicketModel = config.getString("pack-ticket","");
 
         this.displayName = config.getString("display-name", lottoID);
         this.ticketPrice = config.getInt("ticket-price");
@@ -67,7 +75,7 @@ public class LotteryConfig {
 
         this.prizeType = PrizeSettingType.valueOf(config.getString("prize-settings.reward-type", "NORMAL"));
         this.totalReturnRate = config.getDouble("prize-settings.total-return-rate",0.70);
-
+        this.fixedTotalReturnMoney = config.getInt("prize-settings.fixed-total-return-money", -1);
 
         List<Map<?, ?>> rawList = config.getMapList("prize-settings.distribution");
 
@@ -118,6 +126,18 @@ public class LotteryConfig {
         return displayName;
     }
 
+    public String getResourcePackKey(){
+        return  resourcePackKey;
+    }
+
+    public String getSingleTicketModel(){
+        return singleTicketModel;
+    }
+
+    public String getPackTicketModel(){
+        return packTicketModel;
+    }
+
     public int getTicketPrice(){
         return ticketPrice;
     }
@@ -162,8 +182,18 @@ public class LotteryConfig {
         return totalReturnRate;
     }
 
+    public int getFixedTotalReturnMoney(){
+        return  fixedTotalReturnMoney;
+    }
+
     public List<PrizeReward> getPrizeList(){
         return prizeList;
     }
 
+    public boolean isFixedReturnMoneyEnabled() {
+        return fixedTotalReturnMoney > -1;
+    }
+
+
 }
+
