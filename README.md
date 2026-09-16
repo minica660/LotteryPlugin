@@ -8,23 +8,23 @@
 - **データ永続化**: MySQLと連携しているため、サーバーが再起動しても開催中のデータや購入履歴は安全に復元されます。
 - **Vaultを入れると購入や宝くじの交換が行われます**
 
-** 宝くじ開催中**
+**宝くじ開催中**
 
 <img width="1920" height="991" alt="2026-09-16_21 29 39" src="https://github.com/user-attachments/assets/3b2b158f-ff45-45b2-9801-a49a102e4cbe" />
 
 
 
-** 販売ショップ **
+**販売ショップ**
 
 <img width="1917" height="979" alt="image shop1" src="https://github.com/user-attachments/assets/5d2f9a9c-be5e-4d98-828f-c0d3660d42c8" />
 
 
-** 換金ショップ **
+**換金ショップ**
 
 <img width="1917" height="976" alt="image shop2" src="https://github.com/user-attachments/assets/d855c97a-c592-4fc0-a6a3-9c2ea5b4fd48" />
 
 
-** 宝くじ情報表示村人 **
+**宝くじ情報表示村人**
 
 <img width="1917" height="1010" alt="image" src="https://github.com/user-attachments/assets/aa0c1202-51e0-434c-9437-6da583ff2fc2" />
 <img width="1917" height="974" alt="image shop3" src="https://github.com/user-attachments/assets/602330d1-6884-4489-8e9e-49e58fae57f3" />
