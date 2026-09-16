@@ -26,7 +26,6 @@
 
 **宝くじ情報表示村人**
 
-<img width="1917" height="1010" alt="image" src="https://github.com/user-attachments/assets/aa0c1202-51e0-434c-9437-6da583ff2fc2" />
 <img width="1917" height="974" alt="image shop3" src="https://github.com/user-attachments/assets/602330d1-6884-4489-8e9e-49e58fae57f3" />
 
 
