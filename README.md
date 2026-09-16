@@ -8,10 +8,41 @@
 - **データ永続化**: MySQLと連携しているため、サーバーが再起動しても開催中のデータや購入履歴は安全に復元されます。
 - **Vaultを入れると購入や宝くじの交換が行われます**
 
+** 宝くじ開催中**
+
+<img width="1920" height="991" alt="2026-09-16_21 29 39" src="https://github.com/user-attachments/assets/3b2b158f-ff45-45b2-9801-a49a102e4cbe" />
+
+
+
+** 販売ショップ **
+
+<img width="1917" height="1015" alt="image" src="https://github.com/user-attachments/assets/a3dfa534-3f8a-445c-982e-2abe08122f3f" />
+
+
+** 換金ショップ **
+
+<img width="1917" height="1013" alt="image" src="https://github.com/user-attachments/assets/60cd9012-6cab-479f-a4a6-86a8496112d8" />
+
+
+** 宝くじ情報表示村人 **
+
+<img width="1917" height="1010" alt="image" src="https://github.com/user-attachments/assets/aa0c1202-51e0-434c-9437-6da583ff2fc2" />
+
+
+
+
+
+** 宝くじの情報を表示させた場合 **
+
+<img width="1920" height="991" alt="2026-09-16_21 35 47" src="https://github.com/user-attachments/assets/b074b3ee-7c15-4476-8f47-6157f0d31814" />
+
+
+
 ## ⚙️ 動作環境
 - **Java**: `Java 21` 以上
 - **Minecraft Version**: `1.21.1` 以上
 - **データベース**: `MySQL`
+
 
 ## 設定方法 (config.yml)
 宝くじの開催設定はすべて `plugins/Lottery/lotteries/..yml` から行います。
@@ -74,8 +105,8 @@ prize-settings:
 
 | コマンド | 説明 | 権限 |
 | :--- | :--- | :--- |
-| `/lottoadmin start <lottoID>` | 指定した宝くじを開催します | `lottery.commands..` |
-| `/lottoadmin info` | 開催中の宝くじの売り上げ総額などの情報を表示させます | `lottery.use` |
+| `/lottoadmin start <lottoID>` | 指定した宝くじを開催します | `lottery.commands.admin` |
+| `/lottoadmin info` | 開催中の宝くじの売り上げ総額などの情報を表示させます | `lottery.commands.admin` |
 
 
 
