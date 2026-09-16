@@ -122,5 +122,28 @@ prize-settings:
 
 ## API情報/開発者向け情報（ Developer API ）
 
+### LotteryChargeEvent
+
+  プレイヤーが宝くじを購入した際に呼び出されるイベントです
+  
+  ```java
+@EventHandler
+public void onLevelUp(LotteryChargeEvent event) {
+    Player player = event.getPlayer();
+
+    // 購入にかかった金額を変数moneyで取得可能です
+    int money = event.getTotalMoney();
+
+    // 自作Bankプラグインなどの処理を呼び出したり
+    // プレイヤーに独自の通知を行うことが可能です
+
+    player.sendMessage(Component.text("宝くじを購入！ 金額：" + money + "円"))
+    
+}
+  
+
+
+
+
 ---
 
