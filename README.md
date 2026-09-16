@@ -128,7 +128,7 @@ prize-settings:
   
   ```java
 @EventHandler
-public void onLevelUp(LotteryChargeEvent event) {
+public void lotteryCharge(LotteryChargeEvent event) {
     Player player = event.getPlayer();
 
     // 購入にかかった金額を変数moneyで取得可能です
