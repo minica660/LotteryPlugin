@@ -136,6 +136,13 @@ public void lotteryCharge(LotteryChargeEvent event) {
     // 自作Bankプラグインなどの処理を呼び出したり
     // プレイヤーに独自の通知を行うことが可能です
 
+
+    //1 自作Bankプラグインなどで所持金から金額分減らす場合
+
+    // 独自処理
+    // ※ 独自処理で操作が完了した場合は event.setPaymentSuccess(true) メソッドを呼び出してください
+    
+
     player.sendMessage(Component.text("宝くじを購入！ 金額：" + money + "円"))
     
 }
