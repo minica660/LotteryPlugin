@@ -32,7 +32,7 @@
 
 
 
-** 宝くじの情報を表示させた場合 **
+**宝くじの情報を表示させた場合**
 
 <img width="1920" height="991" alt="2026-09-16_21 35 47" src="https://github.com/user-attachments/assets/b074b3ee-7c15-4476-8f47-6157f0d31814" />
 
