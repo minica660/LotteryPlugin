@@ -128,6 +128,8 @@ prize-settings:
   ```java
 @EventHandler
 public void lotteryCharge(LotteryChargeEvent event) {
+
+　　　// 購入をしようとしているプレイヤーを取得
     Player player = event.getPlayer();
 
     // 購入にかかった金額を変数moneyで取得可能です
@@ -137,11 +139,17 @@ public void lotteryCharge(LotteryChargeEvent event) {
     // プレイヤーに独自の通知を行うことが可能です
 
 
-    //1 自作Bankプラグインなどで所持金から金額分減らす場合
+    /*
+      1 自作Bankプラグインなどで所持金から金額分減らす場合
 
-    // 独自処理
-    // ※ 独自処理で操作が完了した場合は event.setPaymentSuccess(true) メソッドを呼び出してください
-    
+        独自処理でプレイヤーの所持金から引く
+        ※ 独自処理で操作が完了した場合は
+
+　　　　　event.setPaymentSuccess(true) メソッドを呼び出してください
+
+     */
+
+
 
     player.sendMessage(Component.text("宝くじを購入！ 金額：" + money + "円"))
     
