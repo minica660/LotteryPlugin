@@ -1,6 +1,7 @@
 package com.example.minicash.lottery.listener;
 
 import com.example.minicash.lottery.Lottery;
+import com.example.minicash.lottery.commands.LottoCommand;
 import com.example.minicash.lottery.manager.shop.VillagerShop;
 import com.example.minicash.lottery.model.ShopType;
 import net.kyori.adventure.key.Key;
@@ -27,8 +28,6 @@ public class ShopEvent implements Listener {
     private final JavaPlugin plugin;
     private final VillagerShop villagerShop;
 
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-    private static final long COOLDOWN_TIME_MS = 5000;
 
     public ShopEvent(JavaPlugin plugin,VillagerShop villagerShop) {
         this.plugin = plugin;
@@ -63,14 +62,12 @@ public class ShopEvent implements Listener {
 
         event.setCancelled(true);
 
-        long currentTime = System.currentTimeMillis();
-        long lastClick = cooldowns.getOrDefault(player.getUniqueId(), 0L);
-
-        if (currentTime - lastClick < COOLDOWN_TIME_MS) {
+        if (!LottoCommand.checkCoolTime(player.getUniqueId())){
+            player.sendMessage(Lottery.getMessage(
+                    Component.text(shopType.getDisplayName() + "は現在忙しいようです！",NamedTextColor.RED)
+            ));
             return;
         }
-
-        cooldowns.put(player.getUniqueId(), currentTime);
 
 
         player.sendMessage(

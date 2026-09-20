@@ -19,6 +19,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,7 +69,21 @@ public final class Lottery extends JavaPlugin {
 
         this.dbSetup = new Setup(this);
 
-        dbSetup.connect();
+        if (!dbSetup.connect()){
+
+            getLogger().severe("======== Lottery ========");
+            getLogger().severe("");
+            getLogger().severe("DB接続が行われませんでした");
+            getLogger().severe("DB作成やconfig.ymlの設定を確認してください");
+            getLogger().severe("");
+            getLogger().severe("=======================");
+
+            Bukkit.getPluginManager().disablePlugin(this);
+
+            return;
+
+        }
+
 
         this.activeDatabase = new ActiveDatabase(dbSetup.getHikariSource());
         this.claimeTicketDatabase = new ClaimeTicketDatabase(this,dbSetup.getHikariSource());

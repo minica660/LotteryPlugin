@@ -10,6 +10,7 @@ import com.example.minicash.lottery.manager.config.LotteryConfigManager;
 import com.example.minicash.lottery.manager.gui.LotteryGUI;
 import com.example.minicash.lottery.manager.shop.VillagerShop;
 import com.example.minicash.lottery.model.LottoType;
+import com.example.minicash.lottery.model.ShopType;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
@@ -25,6 +26,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class LottoCommand implements BasicCommand {
 
@@ -33,6 +37,11 @@ public class LottoCommand implements BasicCommand {
     private final LotteryGUI lotteryGUI;
     private final LotteryManager lotteryManager;
     private final LotteryConfigManager lotteryConfigManager;
+
+
+    private static final Map<UUID, Long> cooldowns = new HashMap<>();
+    private static final long COOLDOWN_TIME_MS = 5000;
+
 
     public LottoCommand(LotteryPurchaseManager lotteryPurchaseManager, LotteryGUI lotteryGUI, LotteryClaimManager lotteryClaimManager, LotteryManager lotteryManager, LotteryConfigManager lotteryConfigManager) {
         this.lotteryPurchaseManager = lotteryPurchaseManager;
@@ -70,12 +79,24 @@ public class LottoCommand implements BasicCommand {
                             return;
                         }
 
+                        if (!checkCoolTime(player.getUniqueId())){
+
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text(ShopType.SHOP.getDisplayName() + "は現在忙しいようだよ！", NamedTextColor.RED)
+                            ));
+
+                            return;
+
+                        }
+
+
                         lotteryGUI.openLottoGUI(player);
 
                         return;
 
                     }
                     case "claim" -> {
+
 
                         if (!player.hasPermission("lottery.commands.lotto.claim")) {
                             player.sendMessage(Lottery.getMessage(
@@ -84,24 +105,57 @@ public class LottoCommand implements BasicCommand {
                             return;
                         }
 
-                        ItemStack item = player.getInventory().getItemInMainHand();
+                        if (!checkCoolTime(player.getUniqueId())){
 
-                        if (item.getType() != Material.AIR) {
-
-                            lotteryClaimManager.claimTicket(player, item);
-
-                        } else {
                             player.sendMessage(Lottery.getMessage(
-                                    Component.text("換金アイテムを何か持ってください!", NamedTextColor.RED)
+                                    Component.text(ShopType.CLAIM.getDisplayName() + "は現在忙しいようだよ！", NamedTextColor.RED)
                             ));
+
+                            return;
+
                         }
 
+                        lotteryClaimManager.claimTicket(player);
+
+
                         return;
+
+
+//                        ItemStack item = player.getInventory().getItemInMainHand();
+//
+//                        if (item.getType() != Material.AIR) {
+//
+//                            lotteryClaimManager.claimTicket(player);
+//
+//                        }else {
+//                            player.sendMessage(Lottery.getMessage(
+//                                    Component.text("換金アイテムを何か持ってください!", NamedTextColor.RED)
+//                            ));
+//                        }
+
 
                     }
                     case "buy" -> {
 
                         if (args.length == 2) {
+
+                            if (!player.hasPermission("lottery.commands.lotto.buy")) {
+                                player.sendMessage(Lottery.getMessage(
+                                        Component.text("あなたは現在宝くじを購入することができません！", NamedTextColor.RED)
+                                ));
+                                return;
+                            }
+
+                            if (!checkCoolTime(player.getUniqueId())){
+
+                                player.sendMessage(Lottery.getMessage(
+                                        Component.text(ShopType.SHOP.getDisplayName() + "は忙しいようだよ！", NamedTextColor.RED)
+                                ));
+
+                                return;
+
+                            }
+
 
                             String ticketType = args[1];
 
@@ -156,6 +210,17 @@ public class LottoCommand implements BasicCommand {
                                     Component.text("あなたは現在宝くじの情報を取得することができません", NamedTextColor.RED)
                             ));
                             return;
+                        }
+
+
+                        if (!checkCoolTime(player.getUniqueId())){
+
+                            player.sendMessage(Lottery.getMessage(
+                                    Component.text(ShopType.INFO.getDisplayName() + "は現在忙しいようだよ！", NamedTextColor.RED)
+                            ));
+
+                            return;
+
                         }
 
 
@@ -266,6 +331,24 @@ public class LottoCommand implements BasicCommand {
 
 
     }
+
+
+
+    public static boolean checkCoolTime(UUID uuid){
+
+        long currentTime = System.currentTimeMillis();
+        long lastClick = cooldowns.getOrDefault(uuid, 0L);
+
+        if (currentTime - lastClick < COOLDOWN_TIME_MS) {
+            return false;
+        }
+
+        cooldowns.put(uuid, currentTime);
+
+        return true;
+    }
+
+
 
     @Override
     public Collection<String> suggest(CommandSourceStack commandSourceStack, String[] args) {

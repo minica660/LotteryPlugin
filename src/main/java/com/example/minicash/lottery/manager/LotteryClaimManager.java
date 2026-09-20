@@ -14,6 +14,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -40,33 +41,63 @@ public class LotteryClaimManager {
 
     }
 
-    public void claimTicket(Player player , ItemStack item){
+    public void claimTicket(Player player ){
 
-        if(item == null || !item.hasItemMeta()){
+        ItemStack mainHandItem = player.getInventory().getItemInMainHand();
 
+        if (mainHandItem.getType() == org.bukkit.Material.AIR || !isClaimableTicket(mainHandItem)) {
             player.sendMessage(Lottery.getMessage(
-                    Component.text("宝くじ用アイテムではありません！", NamedTextColor.RED)
+                    Component.text("宝くじチケットをメインハンドに持ってください！", NamedTextColor.RED)
             ));
-
             return;
+        }
+
+
+
+        int processedCount = 0;
+
+
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+
+            if (item == null || item.getType() == Material.AIR) {
+                continue;
+            }
+
+            if (isClaimableTicket(item)) {
+                processSingleTicket(player, item);
+                processedCount++;
+            }
+
+
 
         }
 
 
+        if (processedCount == 0) {
+            player.sendMessage(Lottery.getMessage(
+                    Component.text("換金対象の宝くじチケットが見つかりませんでした", NamedTextColor.RED)
+            ));
+        }
+
+
+    }
+
+
+    private boolean isClaimableTicket(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) {
+            return false;
+        }
 
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-
         String ticketType = pdc.get(LotteryKeys.TICKET_TYPE, PersistentDataType.STRING);
-        if (!"SINGLE".equals(ticketType)) {
 
-            player.sendMessage(Lottery.getMessage(
-                    Component.text("これは換金可能な宝くじアイテムではありません", NamedTextColor.RED)
-            ));
+        return "SINGLE".equals(ticketType);
+    }
 
-            return;
 
-        }
+    public void processSingleTicket(Player player ,ItemStack item){
 
+        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
 
 
         String ticketUUID = pdc.get(LotteryKeys.TICKET_UUID, PersistentDataType.STRING);
@@ -96,13 +127,13 @@ public class LotteryClaimManager {
         }
 
 
-        claimeTicketDatabase.claimTicket(player,ticketUUID,sessionID,group,number,item).thenAccept(result -> {
+        claimeTicketDatabase.claimTicket(player, ticketUUID, sessionID, group, number, item).thenAccept(result -> {
 
-            Bukkit.getScheduler().runTask(plugin , () ->{
+            Bukkit.getScheduler().runTask(plugin, () -> {
 
                 ClaimDBResult claimResult = result.getClaimResult();
 
-                switch (claimResult){
+                switch (claimResult) {
 
                     case SUCCESS -> {
 
@@ -128,32 +159,30 @@ public class LotteryClaimManager {
                         Bukkit.getPluginManager().callEvent(lotteryRewardEvent);
 
 
-                        item.setAmount(item.getAmount() -1);
+                        item.setAmount(item.getAmount() - 1);
 
                         if (prizeSetting == PrizeSettingType.EVENT) {
                             return;
                         }
 
 
-                        if(lotteryRewardEvent.isSuppressDefaultReward()){
+                        if (lotteryRewardEvent.isSuppressDefaultReward()) {
                             return;
                         }
-
-
 
 
                         RewardType type = result.getRewardType();
                         String rawValue = result.getRewardValue();
 
-                        if(type == RewardType.MONEY){
+                        if (type == RewardType.MONEY) {
 
                             double amount = Double.parseDouble(rawValue);
 
-                            economy.depositPlayer(player , amount);
+                            economy.depositPlayer(player, amount);
 
                             player.sendMessage(Lottery.getMessage(result.getcMessage()));
 
-                        }else if (type == RewardType.ITEM) {
+                        } else if (type == RewardType.ITEM) {
 
                             ItemStack rewardItem = ItemSerializer.deitemSerializer(rawValue);
 
@@ -184,7 +213,7 @@ public class LotteryClaimManager {
 
 
                     }
-                    case PENDING , EXPIRED  ->{
+                    case PENDING, EXPIRED -> {
 
                         player.sendMessage(Lottery.getMessage(result.getcMessage()));
 
@@ -203,14 +232,14 @@ public class LotteryClaimManager {
                     }
                     case REDEEMED -> {
 
-                        plugin.getLogger().severe("既に換金されている宝くじチケットをプレイヤーが所持しています(" + player.getUniqueId() +") ・チケットID:" + ticketUUID + " セッションID: " + sessionID);
+                        plugin.getLogger().severe("既に換金されている宝くじチケットをプレイヤーが所持しています(" + player.getUniqueId() + ") ・チケットID:" + ticketUUID + " セッションID: " + sessionID);
 
                         player.sendMessage(Lottery.getMessage(result.getcMessage()));
 
                     }
-                    case ERROR ->  {
+                    case ERROR -> {
 
-                        plugin.getLogger().log(Level.SEVERE,"claimTicketのDB処理中にエラーが発生しました " , result.getException());
+                        plugin.getLogger().log(Level.SEVERE, "claimTicketのDB処理中にエラーが発生しました ", result.getException());
 
                         player.sendMessage(Lottery.getMessage(result.getcMessage()));
 
@@ -223,16 +252,14 @@ public class LotteryClaimManager {
             });
 
 
-        }).exceptionally(ex ->{
+        }).exceptionally(ex -> {
 
-            player.sendMessage(Lottery.getMessage(Component.text(ex.getMessage(),NamedTextColor.RED)));
+            player.sendMessage(Lottery.getMessage(Component.text(ex.getMessage(), NamedTextColor.RED)));
 
-            plugin.getLogger().log(Level.SEVERE , "claimTicketDatabase.claimTicket()処理中に予期せぬエラーが発生しました " ,ex);
+            plugin.getLogger().log(Level.SEVERE, "claimTicketDatabase.claimTicket()処理中に予期せぬエラーが発生しました ", ex);
 
             return null;
         });
-
-
 
 
     }

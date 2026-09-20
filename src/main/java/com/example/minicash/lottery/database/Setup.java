@@ -37,10 +37,11 @@ public class Setup {
         return hikariSe;
     }
 
-    public void connect() {
+    public boolean connect() {
+
         if (hikariSe != null && !hikariSe.isClosed()) {
             plugin.getLogger().warning("既にプールが存在します");
-            return;
+            return false;
         }
 
         HikariConfig config = new HikariConfig();
@@ -67,14 +68,19 @@ public class Setup {
 
             if (result.isSuccess()) {
                 plugin.getLogger().info("テーブルの設定が完了しました");
-            } else {
+
+                return true;
+            }else {
                 plugin.getLogger().severe(result.getMessage());
+
+                return false;
             }
 
-        } catch (Exception e) {
+        }catch (Exception e) {
 
             plugin.getLogger().severe("Mysqlデータベースへの接続に失敗しました: " + e.getMessage());
 
+            return false;
 
         }
 
