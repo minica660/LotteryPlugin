@@ -53,7 +53,42 @@
 - **データベース**: `MySQL`
 
 
-## 設定方法 (config.yml)
+
+## 設定方法(config.yml)
+宝くじのデータを保存するためのDBに関する設定です
+
+1. **MySQLでデータベースを作成する**
+   まず、MySQL環境にログインし、宝くじデータ用のデータベースを新規作成（例: `CREATE DATABASE lottery;` などを実行）してください。
+
+2. **作成したDB名を指定する**
+   作成したデータベースの名前を、設定ファイルの `mysql.database` の箇所に記入します。
+
+3. **環境に合わせて接続情報を記入する**
+   残りの項目（ホスト名、ポート番号、ユーザー名、パスワード）を、ご自身のMySQL環境の設定に合わせて変更してください。
+
+```yaml
+# config.yml設定例
+
+mysql:
+  host: localhost
+  port: 3306
+  user: root
+  password: pass
+  database: lottery
+
+```
+
+#### 各項目の詳細
+
+* **`host`** : データベースのホスト名です。
+* **`port`** : MySQLが使用するポート番号です。
+* **`user`** / **`password`** : 接続するためのユーザー名とパスワードです。
+* **`database`** : 宝くじのデータを保存するDBの名前です。
+
+
+
+
+## 宝くじの設定方法 (YAML形式)
 宝くじの開催設定はすべて `plugins/Lottery/lotteries/..yml` から行います。
 宝くじ設定の例は以下の通りです。
 
@@ -85,7 +120,7 @@ bossbar:
 
 # 賞金配分と当選モードの設定
 prize-settings:
-  type: NORMAL
+  type: NORMAL  # 賞品を渡すときの処理の行い方
   fixed-total-return-money: -1  # 売り上げ額からではなく指定した合計額から報酬を渡しましす
   total-return-rate: 0.70   # 売上額の何%をプレイヤーに還元するかどうか
 
