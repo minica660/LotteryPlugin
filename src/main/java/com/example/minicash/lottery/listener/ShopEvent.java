@@ -62,7 +62,7 @@ public class ShopEvent implements Listener {
 
         event.setCancelled(true);
 
-        if (!LottoCommand.checkCoolTime(player.getUniqueId())){
+        if (LottoCommand.isCoolingDown(player.getUniqueId())){
             player.sendMessage(Lottery.getMessage(
                     Component.text(shopType.getDisplayName() + "は現在忙しいようです！",NamedTextColor.RED)
             ));

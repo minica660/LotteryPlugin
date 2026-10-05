@@ -27,6 +27,7 @@ public class MPluginLoader implements PluginLoader {
         resolver.addDependency(new Dependency(new DefaultArtifact("com.zaxxer:HikariCP:7.1.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("com.github.minica660.MiniCashLibrary:common:1.1.2"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("com.github.minica660.MiniCashLibrary:paper:1.1.2"), null));
+//        resolver.addDependency(new Dependency(new DefaultArtifact("com.github.minica660:MiniCashAPI:1.3.6"), null));
 
         classpathBuilder.addLibrary(resolver);
 

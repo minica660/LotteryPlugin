@@ -1,5 +1,6 @@
 package com.example.minicash.lottery.manager;
 
+import MiniCash.MBankAPI;
 import com.example.minicash.lottery.Lottery;
 import com.example.minicash.lottery.data.LotteryConfig;
 import com.example.minicash.lottery.database.ClaimeTicketDatabase;
@@ -13,6 +14,7 @@ import com.example.minicash.lottery.util.LotteryKeys;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -32,12 +34,15 @@ public class LotteryClaimManager {
     private final LotteryConfigManager lotteryConfigManager;
     private final ClaimeTicketDatabase claimeTicketDatabase;
 
-    public LotteryClaimManager(JavaPlugin plugin, Economy economy,ClaimeTicketDatabase claimeTicketDatabase,LotteryConfigManager lotteryConfigManager) {
+    private final MBankAPI mBankAPI;
+
+    public LotteryClaimManager(JavaPlugin plugin, Economy economy,ClaimeTicketDatabase claimeTicketDatabase,LotteryConfigManager lotteryConfigManager , MBankAPI mBankAPI) {
 
         this.plugin = plugin;
         this.economy = economy;
         this.claimeTicketDatabase = claimeTicketDatabase;
         this.lotteryConfigManager = lotteryConfigManager;
+        this.mBankAPI = mBankAPI;
 
     }
 
@@ -139,6 +144,7 @@ public class LotteryClaimManager {
 
                         PrizeSettingType prizeSetting = lotteryConfig.getPrizeType();
 
+                        // イベントの発生や処理を行わない設定になっていた場合
                         if (prizeSetting == PrizeSettingType.NO) {
                             item.setAmount(item.getAmount() - 1);
                             return;
@@ -159,7 +165,6 @@ public class LotteryClaimManager {
                         Bukkit.getPluginManager().callEvent(lotteryRewardEvent);
 
 
-                        item.setAmount(item.getAmount() - 1);
 
                         if (prizeSetting == PrizeSettingType.EVENT) {
                             return;
@@ -176,13 +181,54 @@ public class LotteryClaimManager {
 
                         if (type == RewardType.MONEY) {
 
-                            double amount = Double.parseDouble(rawValue);
+                            int amount = Integer.parseInt(rawValue);
 
-                            economy.depositPlayer(player, amount);
+                            if (this.mBankAPI != null) {
 
-                            player.sendMessage(Lottery.getMessage(result.getcMessage()));
+                                mBankAPI.deposit(player, player.getName(), amount, "Lottery", "宝くじに当選").thenAccept(bankAPIResult -> {
 
-                        } else if (type == RewardType.ITEM) {
+                                    Bukkit.getScheduler().runTask(plugin, () -> {
+
+                                        if (bankAPIResult.isSuccess()) {
+
+                                            item.setAmount(item.getAmount() - 1);
+
+
+                                            player.sendMessage(Lottery.getMessage(result.getcMessage()));
+
+                                        }else {
+
+                                            player.sendMessage(Lottery.getMessage(Component.text("当選金の振込に失敗しました: " + bankAPIResult.getErrorMsg(), NamedTextColor.RED)));
+
+                                        }
+                                    });
+
+
+                                });
+
+                            }else if (this.economy != null) {
+
+                                EconomyResponse response = economy.depositPlayer(player, amount);
+
+                                if (response.transactionSuccess()) {
+
+                                    item.setAmount(item.getAmount() - 1);
+
+
+                                    player.sendMessage(Lottery.getMessage(result.getcMessage()));
+
+                                }else {
+
+                                    player.sendMessage(Lottery.getMessage(Component.text("当選金の振込に失敗しました: " + response.errorMessage, NamedTextColor.RED)));
+                                }
+                            }
+
+
+
+                        }else if (type == RewardType.ITEM) {
+
+                            item.setAmount(item.getAmount() - 1);
+
 
                             ItemStack rewardItem = ItemSerializer.deitemSerializer(rawValue);
 
@@ -221,6 +267,7 @@ public class LotteryClaimManager {
                     case LOSE -> {
 
 
+
                         player.sendMessage(Lottery.getMessage(result.getcMessage()));
 
                         item.setAmount(item.getAmount() - 1);
@@ -232,12 +279,14 @@ public class LotteryClaimManager {
                     }
                     case REDEEMED -> {
 
+
                         plugin.getLogger().severe("既に換金されている宝くじチケットをプレイヤーが所持しています(" + player.getUniqueId() + ") ・チケットID:" + ticketUUID + " セッションID: " + sessionID);
 
                         player.sendMessage(Lottery.getMessage(result.getcMessage()));
 
                     }
                     case ERROR -> {
+
 
                         plugin.getLogger().log(Level.SEVERE, "claimTicketのDB処理中にエラーが発生しました ", result.getException());
 

@@ -1,5 +1,6 @@
 package com.example.minicash.lottery;
 
+import MiniCash.MBankAPI;
 import com.example.minicash.lottery.commands.LotteryAdminCommand;
 import com.example.minicash.lottery.commands.LottoCommand;
 import com.example.minicash.lottery.commands.handler.LotteryAdminCommandHandler;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -50,15 +52,49 @@ public final class Lottery extends JavaPlugin {
     private LotteryAdminCommand lotteryAdminCommand;
     private LotteryAdminCommandHandler adminCommandHandler;
 
+    // 独自Bankシステム
+    private MBankAPI mBankAPI = null;
 
     @Override
     public void onEnable() {
         // Plugin startup logic
-        if (!setupEconomy()) {
-            getLogger().severe("Vault API not found!");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
+
+
+
+        if (getServer().getPluginManager().getPlugin("MapleBank") != null) {
+
+            RegisteredServiceProvider<MBankAPI> rsp = getServer().getServicesManager().getRegistration(MBankAPI.class);
+
+            if (rsp != null) {
+
+                this.mBankAPI = rsp.getProvider();
+
+                getLogger().info("MapleBankへの接続完了！");
+
+            } else {
+
+                getLogger().warning("MapleBankは検出されましたが、サービスレジストリの準備中です");
+
+
+            }
+
         }
+
+
+
+        if (!setupEconomy()) {
+
+            getLogger().severe("Vault API not found!");
+
+            getServer().getPluginManager().disablePlugin(this);
+
+            return;
+
+        }else {
+            getLogger().info("Vaultとの連携完了！");
+
+        }
+
 
         saveDefaultConfig();
 
@@ -69,7 +105,7 @@ public final class Lottery extends JavaPlugin {
 
         this.dbSetup = new Setup(this);
 
-        if (!dbSetup.connect()){
+        if (!dbSetup.connect()) {
 
             getLogger().severe("======== Lottery ========");
             getLogger().severe("");
@@ -86,31 +122,32 @@ public final class Lottery extends JavaPlugin {
 
 
         this.activeDatabase = new ActiveDatabase(dbSetup.getHikariSource());
-        this.claimeTicketDatabase = new ClaimeTicketDatabase(this,dbSetup.getHikariSource());
+        this.claimeTicketDatabase = new ClaimeTicketDatabase(this, dbSetup.getHikariSource());
         this.lotteryResultDatabase = new LotteryResultDatabase(dbSetup.getHikariSource());
         this.playerDatabase = new PlayerDatabase(dbSetup.getHikariSource());
 
 
-        this.lotteryManager = new LotteryManager(this, activeDatabase , lotteryResultDatabase , lotteryConfigManager);
-        this.lotteryClaimManager = new LotteryClaimManager(this,economy ,claimeTicketDatabase,lotteryConfigManager);
-        this.lotteryPurchaseManager = new LotteryPurchaseManager(economy , this , activeDatabase , playerDatabase , lotteryManager);
 
-        this.lotteryGUI = new LotteryGUI(lotteryManager,lotteryConfigManager);
+        this.lotteryManager = new LotteryManager(this, activeDatabase, lotteryResultDatabase, lotteryConfigManager);
+        this.lotteryClaimManager = new LotteryClaimManager(this, economy, claimeTicketDatabase, lotteryConfigManager, mBankAPI);
+        this.lotteryPurchaseManager = new LotteryPurchaseManager(economy, this, activeDatabase, playerDatabase, lotteryManager, mBankAPI);
+
+        this.lotteryGUI = new LotteryGUI(lotteryManager, lotteryConfigManager);
 
         this.villagerShop = new VillagerShop(this);
 
 
-        this.adminCommandHandler = new LotteryAdminCommandHandler(this,lotteryManager,activeDatabase,playerDatabase,lotteryConfigManager,villagerShop);
-        this.lotteryAdminCommand = new LotteryAdminCommand(adminCommandHandler,lotteryConfigManager);
+        this.adminCommandHandler = new LotteryAdminCommandHandler(this, lotteryManager, activeDatabase, playerDatabase, lotteryConfigManager, villagerShop);
+        this.lotteryAdminCommand = new LotteryAdminCommand(adminCommandHandler, lotteryConfigManager);
 
         new LotteryKeys(this);
 
         PluginManager pluginManager = getServer().getPluginManager();
 
-        pluginManager.registerEvents(new ItemClickEvent(lotteryConfigManager),this);
-        pluginManager.registerEvents(new LotteryGUIEvent(),this);
-        pluginManager.registerEvents(new PlayerConnectEvent(lotteryManager),this);
-        pluginManager.registerEvents(new ShopEvent(this,villagerShop),this);
+        pluginManager.registerEvents(new ItemClickEvent(lotteryConfigManager), this);
+        pluginManager.registerEvents(new LotteryGUIEvent(), this);
+        pluginManager.registerEvents(new PlayerConnectEvent(lotteryManager), this);
+        pluginManager.registerEvents(new ShopEvent(this, villagerShop), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             // register your commands here ...
@@ -123,9 +160,12 @@ public final class Lottery extends JavaPlugin {
 
         });
 
-        registerCommand("lotto","コマンド",new LottoCommand(lotteryPurchaseManager,lotteryGUI,lotteryClaimManager,lotteryManager,lotteryConfigManager));
+        registerCommand("lotto", "コマンド", new LottoCommand(lotteryPurchaseManager, lotteryGUI, lotteryClaimManager, lotteryManager, lotteryConfigManager));
 
         lotteryManager.loadActiveLottery();
+
+
+
 
 
     }
@@ -133,9 +173,14 @@ public final class Lottery extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        dbSetup.disConnect();
-    }
 
+        if (dbSetup != null) {
+
+            dbSetup.disConnect();
+
+        }
+
+    }
 
 
     //　定義してみた？
@@ -160,7 +205,7 @@ public final class Lottery extends JavaPlugin {
     }
 
 
-    public static Component getMessage(Component message){
+    public static Component getMessage(Component message) {
         return Component.text("[").color(NamedTextColor.DARK_AQUA).append(Component.text("MLottery").color(NamedTextColor.GREEN).append(Component.text("]").color(NamedTextColor.DARK_AQUA)
                 .append(message)
         ));

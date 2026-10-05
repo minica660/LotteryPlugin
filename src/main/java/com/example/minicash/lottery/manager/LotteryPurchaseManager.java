@@ -1,5 +1,6 @@
 package com.example.minicash.lottery.manager;
 
+import MiniCash.MBankAPI;
 import com.example.minicash.lottery.Lottery;
 import com.example.minicash.lottery.data.ActiveLotterySession;
 import com.example.minicash.lottery.data.LotteryConfig;
@@ -32,13 +33,16 @@ public class LotteryPurchaseManager {
     private final ActiveDatabase activeDatabase;
     private final PlayerDatabase playerDatabase;
 
+    private final MBankAPI mBankAPI;
 
-    public LotteryPurchaseManager(Economy economy,JavaPlugin plugin , ActiveDatabase activeDatabase , PlayerDatabase playerDatabase  , LotteryManager lotteryManager) {
+    public LotteryPurchaseManager(Economy economy,JavaPlugin plugin , ActiveDatabase activeDatabase , PlayerDatabase playerDatabase  , LotteryManager lotteryManager , MBankAPI mBankAPI) {
         this.economy = economy;
         this.plugin = plugin;
         this.activeDatabase = activeDatabase;
         this.playerDatabase = playerDatabase;
         this.lotteryManager = lotteryManager;
+
+        this.mBankAPI = mBankAPI;
     }
 
 
@@ -102,6 +106,40 @@ public class LotteryPurchaseManager {
                 int totalPrice = lotteryConfig.getTicketPrice() * amount;
 
                 LotteryChargeEvent lotteryChargeEvent = new LotteryChargeEvent(player,totalPrice,sessionID);
+
+                if (this.mBankAPI != null){
+
+                    mBankAPI.withdraw(player , player.getName() , totalPrice , "Lottery", "宝くじを" + amount + "枚購入").thenAccept(result -> {
+
+                        Bukkit.getScheduler().runTask(plugin,() ->{
+
+                            if (result.isSuccess()){
+                                lotteryChargeEvent.setPaymentSuccess(true);
+                            }else {
+                                lotteryChargeEvent.setErrorMessage(
+                                        Component.text(result.getErrorMsg() , NamedTextColor.RED)
+                                );
+                            }
+
+                        });
+
+
+                    }).exceptionally(ex ->{
+
+                        Bukkit.getScheduler().runTask(plugin,()->{
+
+                            lotteryChargeEvent.setErrorMessage(
+                                    Component.text(ex.getMessage() , NamedTextColor.RED)
+                            );
+
+                        });
+
+                        return null;
+
+                    });
+
+                }
+
 
                 if(this.economy != null) {
 

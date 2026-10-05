@@ -10,9 +10,14 @@ description: 宝くじプラグイン！
 website: https://github.com/minica660/LotteryPlugin
 loader: com.example.minicash.lottery.MPluginLoader
 
+
 dependencies:
   server:
     Vault:
       load: BEFORE
       required: false
+      join-classpath: true
+    MapleBank:
+      load: BEFORE
+      required: true
       join-classpath: true

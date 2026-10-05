@@ -16,7 +16,11 @@ dependencies {
     compileOnly("com.github.minica660.MiniCashLibrary:common:1.1.2")
     compileOnly("com.github.minica660.MiniCashLibrary:paper:1.1.2")
 
+    compileOnly("com.github.minica660:MiniCashAPI:1.3.8-pre1")
+
     compileOnly("com.zaxxer:HikariCP:7.1.0")
+
+    
 
 }
 

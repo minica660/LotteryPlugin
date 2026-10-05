@@ -79,7 +79,7 @@ public class LottoCommand implements BasicCommand {
                             return;
                         }
 
-                        if (!checkCoolTime(player.getUniqueId())){
+                        if (isCoolingDown(player.getUniqueId())){
 
                             player.sendMessage(Lottery.getMessage(
                                     Component.text(ShopType.SHOP.getDisplayName() + "は現在忙しいようだよ！", NamedTextColor.RED)
@@ -89,6 +89,7 @@ public class LottoCommand implements BasicCommand {
 
                         }
 
+                        startCooldown(player.getUniqueId());
 
                         lotteryGUI.openLottoGUI(player);
 
@@ -105,7 +106,7 @@ public class LottoCommand implements BasicCommand {
                             return;
                         }
 
-                        if (!checkCoolTime(player.getUniqueId())){
+                        if (isCoolingDown(player.getUniqueId())){
 
                             player.sendMessage(Lottery.getMessage(
                                     Component.text(ShopType.CLAIM.getDisplayName() + "は現在忙しいようだよ！", NamedTextColor.RED)
@@ -114,6 +115,9 @@ public class LottoCommand implements BasicCommand {
                             return;
 
                         }
+
+                        startCooldown(player.getUniqueId());
+
 
                         lotteryClaimManager.claimTicket(player);
 
@@ -146,7 +150,7 @@ public class LottoCommand implements BasicCommand {
                                 return;
                             }
 
-                            if (!checkCoolTime(player.getUniqueId())){
+                            if (isCoolingDown(player.getUniqueId())){
 
                                 player.sendMessage(Lottery.getMessage(
                                         Component.text(ShopType.SHOP.getDisplayName() + "は忙しいようだよ！", NamedTextColor.RED)
@@ -155,6 +159,9 @@ public class LottoCommand implements BasicCommand {
                                 return;
 
                             }
+
+
+                            startCooldown(player.getUniqueId());
 
 
                             String ticketType = args[1];
@@ -213,7 +220,7 @@ public class LottoCommand implements BasicCommand {
                         }
 
 
-                        if (!checkCoolTime(player.getUniqueId())){
+                        if (isCoolingDown(player.getUniqueId())){
 
                             player.sendMessage(Lottery.getMessage(
                                     Component.text(ShopType.INFO.getDisplayName() + "は現在忙しいようだよ！", NamedTextColor.RED)
@@ -222,6 +229,9 @@ public class LottoCommand implements BasicCommand {
                             return;
 
                         }
+
+                        startCooldown(player.getUniqueId());
+
 
 
                         if (!lotteryManager.isSessionActive()) {
@@ -334,18 +344,20 @@ public class LottoCommand implements BasicCommand {
 
 
 
-    public static boolean checkCoolTime(UUID uuid){
-
+    /**
+     * プレイヤーがクールダウン中かどうかを判定
+     */
+    public static boolean isCoolingDown(UUID uuid) {
         long currentTime = System.currentTimeMillis();
-        long lastClick = cooldowns.getOrDefault(uuid, 0L);
+        long lastAction = cooldowns.getOrDefault(uuid, 0L);
+        return (currentTime - lastAction) < COOLDOWN_TIME_MS;
+    }
 
-        if (currentTime - lastClick < COOLDOWN_TIME_MS) {
-            return false;
-        }
-
-        cooldowns.put(uuid, currentTime);
-
-        return true;
+    /**
+     * プレイヤーのクールダウンを開始
+     */
+    public static void startCooldown(UUID uuid) {
+        cooldowns.put(uuid, System.currentTimeMillis());
     }
 
 
